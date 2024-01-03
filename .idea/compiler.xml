@@ -8,12 +8,12 @@
         <outputRelativeToContentRoot value="true" />
         <module name="shortlink-gateway" />
         <module name="shortlink-admin" />
-        <module name="shortlink-project" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="8">
       <module name="gateway" target="17" />
       <module name="shortlink" target="1.5" />
+      <module name="shortlink-project" target="17" />
     </bytecodeTargetLevel>
   </component>
 </project>
