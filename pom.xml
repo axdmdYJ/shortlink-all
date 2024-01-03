@@ -10,6 +10,7 @@
     <modules>
         <module>admin</module>
         <module>gateway</module>
+        <module>project</module>
     </modules>
     <version>1.0-SNAPSHOT</version>
 
@@ -84,7 +85,7 @@
                 <artifactId>redisson-spring-boot-starter</artifactId>
                 <version>${redisson.version}</version>
             </dependency>
-            
+
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
