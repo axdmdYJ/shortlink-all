@@ -12,6 +12,7 @@ import com.tjut.zjone.service.UserService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -28,6 +29,10 @@ public class UserController {
        return  Results.success(BeanUtil.toBean(userService.getUserByUsername(username),UserActualRespDTO.class));
     }
 
+    @GetMapping("/api/short-link/admin/v1/actual/user/has-username")
+    public Result<Boolean> hasUsername(String username){
+            return Results.success(userService.hasUsername(username));
+    }
 
 
 }
