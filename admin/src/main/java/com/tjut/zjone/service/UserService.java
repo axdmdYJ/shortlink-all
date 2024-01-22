@@ -3,6 +3,7 @@ package com.tjut.zjone.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tjut.zjone.dao.domain.UserDO;
 import com.tjut.zjone.dto.resp.UserRespDTO;
+import com.tjut.zjone.dto.resq.UserRegisterReqDTO;
 import org.springframework.stereotype.Service;
 
 /**
@@ -16,4 +17,7 @@ public interface UserService extends IService<UserDO> {
 
     UserRespDTO getUserByUsername(String username);
 
+    Boolean hasUsername(String username);
+
+    void userRegister(UserRegisterReqDTO registerParam);
 }
