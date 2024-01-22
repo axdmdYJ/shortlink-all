@@ -5,7 +5,7 @@ import com.tjut.zjone.common.convention.errorcode.IErrorCode;
 public enum UserErrorCodeEnum implements IErrorCode {
 
     USER_NULL("B000200","用户不存在"),
-    USER_Name_EXISTS("B000201","用户名已存在"),
+    USER_NAME_EXISTS("B000201","用户名已存在"),
     USER_EXISTS("B000202", "用户记录已存在"),
 
     USER_SAVE_FAILE("B000203", "用户记录新增失败");

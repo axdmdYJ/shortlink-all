@@ -3,6 +3,7 @@ package com.tjut.zjone.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tjut.zjone.common.constant.RedisCacheConstant;
 import com.tjut.zjone.common.convention.exception.ClientException;
 import com.tjut.zjone.common.enums.UserErrorCodeEnum;
 import com.tjut.zjone.dao.domain.UserDO;
@@ -12,6 +13,8 @@ import com.tjut.zjone.dto.resq.UserRegisterReqDTO;
 import com.tjut.zjone.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBloomFilter;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +30,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
     implements UserService {
     private final RBloomFilter<String> userRegisterCzachePenetrationBloomFilter;
 
+    private final RedissonClient redissonClient;
     @Autowired
     UserMapper userMapper;
     @Override
@@ -53,13 +57,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
     @Override
     public void userRegister(UserRegisterReqDTO registerParam) {
         if (hasUsername(registerParam.getUsername())){
-            throw new ClientException(UserErrorCodeEnum.USER_Name_EXISTS);
+            throw new ClientException(UserErrorCodeEnum.USER_NAME_EXISTS);
         }
-        int inserted=userMapper.insert(BeanUtil.toBean(registerParam,UserDO.class));
-        if(inserted < 1){
-            throw new ClientException(UserErrorCodeEnum.USER_SAVE_FAILE);
+        RLock rLock = redissonClient.getLock(RedisCacheConstant.LOCK_USER_REGISTER_KEY);
+        try{
+            if (rLock.tryLock()){
+                int inserted=userMapper.insert(BeanUtil.toBean(registerParam,UserDO.class));
+                if(inserted < 1){
+                    throw new ClientException(UserErrorCodeEnum.USER_SAVE_FAILE);
+                }
+                userRegisterCzachePenetrationBloomFilter.add(registerParam.getUsername());
+            }
+        }finally {
+            rLock.unlock();
         }
-        userRegisterCzachePenetrationBloomFilter.add(registerParam.getUsername());
+
     }
 
 
