@@ -2,6 +2,8 @@ package com.tjut.zjone.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tjut.zjone.common.constant.RedisCacheConstant;
 import com.tjut.zjone.common.convention.exception.ClientException;
@@ -10,6 +12,7 @@ import com.tjut.zjone.dao.domain.UserDO;
 import com.tjut.zjone.dao.mapper.UserMapper;
 import com.tjut.zjone.dto.resp.UserRespDTO;
 import com.tjut.zjone.dto.resq.UserRegisterReqDTO;
+import com.tjut.zjone.dto.resq.UserUpdateReqDTO;
 import com.tjut.zjone.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBloomFilter;
@@ -74,6 +77,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
 
     }
 
+    @Override
+    public void userUpdate(UserUpdateReqDTO requestParam) {
+        //todo 验证当前用户是否为登陆用户
+        LambdaUpdateWrapper<UserDO> updateWrapper = Wrappers.lambdaUpdate(UserDO.class)
+                .eq(UserDO::getUsername, requestParam.getUsername());
+        userMapper.update(BeanUtil.toBean(requestParam,UserDO.class),updateWrapper);
+    }
 
 }
 

@@ -7,6 +7,7 @@ import com.tjut.zjone.common.convention.result.Results;
 import com.tjut.zjone.dto.resp.UserActualRespDTO;
 import com.tjut.zjone.dto.resp.UserRespDTO;
 import com.tjut.zjone.dto.resq.UserRegisterReqDTO;
+import com.tjut.zjone.dto.resq.UserUpdateReqDTO;
 import com.tjut.zjone.service.UserService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +41,13 @@ public class UserController {
         userService.userRegister(registerParam);
         return Results.success();
     }
+
+    @PutMapping("/api/short-link/admin/v1/user")
+    public Result<Void> userUpdate(@RequestBody UserUpdateReqDTO requestParam){
+        userService.userUpdate(requestParam);
+        return Results.success();
+    }
+
 
 
 }

@@ -14,12 +14,12 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     public void insertFill(MetaObject metaObject) {
         log.info("start insert fill ....");
         // 或者
-        this.strictInsertFill(metaObject, "createTime", ()->new Date(), Date.class); // 起始版本 3.3.3(推荐)
+        this.strictInsertFill(metaObject, "createTime", Date::new, Date.class); // 起始版本 3.3.3(推荐)
         this.strictInsertFill(metaObject, "delFlag", () -> 0, Integer.class); // 起始版本 3.3.3(推荐)
     }
     @Override
     public void updateFill(MetaObject metaObject) {
-        this.strictInsertFill(metaObject, "updateTime", ()->new Date(), Date.class); // 起始版本 3.3.3(推荐)
+        this.strictUpdateFill(metaObject, "updateTime", Date::new, Date.class); // 起始版本 3.3.3(推荐)
     }
 
 }
