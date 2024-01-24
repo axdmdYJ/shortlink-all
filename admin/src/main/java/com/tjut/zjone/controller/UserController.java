@@ -5,7 +5,9 @@ import cn.hutool.core.bean.BeanUtil;
 import com.tjut.zjone.common.convention.result.Result;
 import com.tjut.zjone.common.convention.result.Results;
 import com.tjut.zjone.dto.resp.UserActualRespDTO;
+import com.tjut.zjone.dto.resp.UserLoginRespDTO;
 import com.tjut.zjone.dto.resp.UserRespDTO;
+import com.tjut.zjone.dto.resq.UserLoginReqDTO;
 import com.tjut.zjone.dto.resq.UserRegisterReqDTO;
 import com.tjut.zjone.dto.resq.UserUpdateReqDTO;
 import com.tjut.zjone.service.UserService;
@@ -45,6 +47,23 @@ public class UserController {
     @PutMapping("/api/short-link/admin/v1/user")
     public Result<Void> userUpdate(@RequestBody UserUpdateReqDTO requestParam){
         userService.userUpdate(requestParam);
+        return Results.success();
+    }
+
+    @PostMapping("/api/short-link/admin/v1/user/login")
+    public Result<UserLoginRespDTO> userLogin(@RequestBody UserLoginReqDTO requestParam){
+        return userService.userLogin(requestParam);
+    }
+
+    @GetMapping("/api/short-link/admin/v1/user/check-login")
+    public Result<Boolean> userHasLogin(@RequestParam("username") String username ,@RequestParam("token") String token){
+        Boolean hasLogin = userService.userHasLogin(username, token);
+        return  Results.success(hasLogin);
+    }
+
+    @DeleteMapping("/api/short-link/admin/v1/user/logout")
+    public  Result<Void> userLogout(@RequestParam("username") String username, @RequestParam("token") String token){
+        userService.userLogout(username, token);
         return Results.success();
     }
 

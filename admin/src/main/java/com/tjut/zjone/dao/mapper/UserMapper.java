@@ -1,7 +1,7 @@
 package com.tjut.zjone.dao.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.tjut.zjone.dao.domain.UserDO;
+import com.tjut.zjone.dao.entity.UserDO;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

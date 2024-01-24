@@ -1,16 +1,22 @@
 package com.tjut.zjone.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.lang.UUID;
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tjut.zjone.common.constant.RedisCacheConstant;
 import com.tjut.zjone.common.convention.exception.ClientException;
+import com.tjut.zjone.common.convention.result.Result;
+import com.tjut.zjone.common.convention.result.Results;
 import com.tjut.zjone.common.enums.UserErrorCodeEnum;
-import com.tjut.zjone.dao.domain.UserDO;
+import com.tjut.zjone.dao.entity.UserDO;
 import com.tjut.zjone.dao.mapper.UserMapper;
+import com.tjut.zjone.dto.resp.UserLoginRespDTO;
 import com.tjut.zjone.dto.resp.UserRespDTO;
+import com.tjut.zjone.dto.resq.UserLoginReqDTO;
 import com.tjut.zjone.dto.resq.UserRegisterReqDTO;
 import com.tjut.zjone.dto.resq.UserUpdateReqDTO;
 import com.tjut.zjone.service.UserService;
@@ -19,7 +25,7 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 /**
@@ -32,10 +38,9 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
     implements UserService {
     private final RBloomFilter<String> userRegisterCzachePenetrationBloomFilter;
-
+    private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
-    @Autowired
-    UserMapper userMapper;
+    private final UserMapper userMapper;
     @Override
     public UserRespDTO getUserByUsername(String username) {
             // 调用Mapper方法查询用户
@@ -83,6 +88,36 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
         LambdaUpdateWrapper<UserDO> updateWrapper = Wrappers.lambdaUpdate(UserDO.class)
                 .eq(UserDO::getUsername, requestParam.getUsername());
         userMapper.update(BeanUtil.toBean(requestParam,UserDO.class),updateWrapper);
+    }
+
+    @Override
+    public Result<UserLoginRespDTO> userLogin(UserLoginReqDTO requestParam) {
+        LambdaQueryWrapper<UserDO> queryWrapper = Wrappers.lambdaQuery(UserDO.class)
+                .eq(UserDO::getUsername, requestParam.getUsername())
+                .eq(UserDO::getPassword, requestParam.getPassword())
+                .eq(UserDO::getDelFlag, 0);
+        UserDO user = userMapper.selectOne(queryWrapper);
+        if(user == null){
+            throw new ClientException("用户不存在");
+        }
+        Boolean hasedLogin = stringRedisTemplate.hasKey("login_"+requestParam.getUsername());
+        if (hasedLogin !=null && hasedLogin){
+            throw new ClientException("用户已登陆");
+        }
+        String token = UUID.randomUUID().toString();
+        //避免重复登陆
+        stringRedisTemplate.opsForHash().put("login_"+requestParam.getUsername(), token, JSON.toJSONString(user));
+        return Results.success(new UserLoginRespDTO(token));
+    }
+
+    @Override
+    public Boolean userHasLogin(String username, String token) {
+        return stringRedisTemplate.opsForHash().get("login_"+ username, token) != null;
+    }
+
+    @Override
+    public void userLogout(String username, String token) {
+        stringRedisTemplate.opsForHash().delete("login_"+ username, token);
     }
 
 }

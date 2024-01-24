@@ -1,4 +1,4 @@
-package com.tjut.zjone.dao.domain;
+package com.tjut.zjone.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
