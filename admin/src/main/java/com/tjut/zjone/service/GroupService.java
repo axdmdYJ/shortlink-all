@@ -1,7 +1,8 @@
 package com.tjut.zjone.service;
 
-import com.tjut.zjone.dao.entity.GroupDO;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.tjut.zjone.dao.entity.GroupDO;
+import com.tjut.zjone.dto.resq.GroupSaveNameReqDTO;
 
 /**
 * @author a0000
@@ -11,5 +12,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface GroupService extends IService<GroupDO> {
 
 
-    void save(String group_name);
+    void saveGroupName(GroupSaveNameReqDTO requestParam);
 }
