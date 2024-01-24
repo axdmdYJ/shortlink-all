@@ -1,4 +1,4 @@
-package com.tjut.zjone.dto.resq;
+package com.tjut.zjone.dto.req;
 
 import lombok.Data;
 

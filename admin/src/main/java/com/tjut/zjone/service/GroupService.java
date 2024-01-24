@@ -2,7 +2,10 @@ package com.tjut.zjone.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tjut.zjone.dao.entity.GroupDO;
-import com.tjut.zjone.dto.resq.GroupSaveNameReqDTO;
+import com.tjut.zjone.dto.req.GroupSaveNameReqDTO;
+import com.tjut.zjone.dto.resp.ShortLinkGroupListRespDTO;
+
+import java.util.List;
 
 /**
 * @author a0000
@@ -12,5 +15,13 @@ import com.tjut.zjone.dto.resq.GroupSaveNameReqDTO;
 public interface GroupService extends IService<GroupDO> {
 
 
+    /**
+     * 新增短链接组名
+     * @param requestParam 包含短链接组名
+     */
     void saveGroupName(GroupSaveNameReqDTO requestParam);
+
+    List<ShortLinkGroupListRespDTO> getGroupList();
+
+
 }

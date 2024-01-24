@@ -1,13 +1,17 @@
 package com.tjut.zjone.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tjut.zjone.dao.entity.GroupDO;
 import com.tjut.zjone.dao.mapper.GroupMapper;
-import com.tjut.zjone.dto.resq.GroupSaveNameReqDTO;
+import com.tjut.zjone.dto.req.GroupSaveNameReqDTO;
+import com.tjut.zjone.dto.resp.ShortLinkGroupListRespDTO;
 import com.tjut.zjone.service.GroupService;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 import static com.tjut.zjone.util.GidGeneratorUtil.generateRandomString;
 
@@ -28,11 +32,23 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
              gid = generateRandomString();
          }
         GroupDO groupDO = GroupDO.builder()
+                .sortOrder(0)
                 .name(requestParam.getName())
                 .gid(gid)
                 .build();
         baseMapper.insert(groupDO);
     }
+
+    @Override
+    public List<ShortLinkGroupListRespDTO> getGroupList() {
+        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                .eq(GroupDO::getDelFlag, 0)
+                .eq(GroupDO::getUsername, "yujie")
+                .orderByDesc(GroupDO::getSortOrder);
+        List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
+        return BeanUtil.copyToList(groupDOList, ShortLinkGroupListRespDTO.class);
+    }
+
     public boolean gidIfAbsent(String gid){
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getGid, gid)

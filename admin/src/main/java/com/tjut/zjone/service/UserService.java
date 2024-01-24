@@ -5,9 +5,9 @@ import com.tjut.zjone.common.convention.result.Result;
 import com.tjut.zjone.dao.entity.UserDO;
 import com.tjut.zjone.dto.resp.UserLoginRespDTO;
 import com.tjut.zjone.dto.resp.UserRespDTO;
-import com.tjut.zjone.dto.resq.UserLoginReqDTO;
-import com.tjut.zjone.dto.resq.UserRegisterReqDTO;
-import com.tjut.zjone.dto.resq.UserUpdateReqDTO;
+import com.tjut.zjone.dto.req.UserLoginReqDTO;
+import com.tjut.zjone.dto.req.UserRegisterReqDTO;
+import com.tjut.zjone.dto.req.UserUpdateReqDTO;
 import org.springframework.stereotype.Service;
 
 /**
