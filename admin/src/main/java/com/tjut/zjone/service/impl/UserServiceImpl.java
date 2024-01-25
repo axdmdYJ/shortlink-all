@@ -26,7 +26,10 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.TimeoutUtils;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.TimeUnit;
 
 /**
 * @author a0000
@@ -107,6 +110,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
         String token = UUID.randomUUID().toString();
         //避免重复登陆
         stringRedisTemplate.opsForHash().put("login_"+requestParam.getUsername(), token, JSON.toJSONString(user));
+        stringRedisTemplate.expire("login_"+requestParam.getUsername(),30L, TimeUnit.MINUTES);
         return Results.success(new UserLoginRespDTO(token));
     }
 
