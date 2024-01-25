@@ -3,6 +3,7 @@ package com.tjut.zjone.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tjut.zjone.dao.entity.GroupDO;
 import com.tjut.zjone.dto.req.GroupSaveNameReqDTO;
+import com.tjut.zjone.dto.req.ShortLinkGroupSortDTO;
 import com.tjut.zjone.dto.req.ShortLinkGroupUpdateReqDTO;
 import com.tjut.zjone.dto.resp.ShortLinkGroupListRespDTO;
 
@@ -25,5 +26,21 @@ public interface GroupService extends IService<GroupDO> {
     List<ShortLinkGroupListRespDTO> getGroupList();
 
 
+    /**
+     * 修改短链接分组信息
+     * @param requestParam 修改短链接分组信息传参
+     */
     void updateGroup(ShortLinkGroupUpdateReqDTO requestParam);
+
+    /**
+     * 删除短链接分组
+     * @param gid 分组标识
+     */
+    void deleteGroup(String gid);
+
+    /**
+     * 短链接分组排序
+     * @param requestParam 短链接分组排序传参
+     */
+    void sortGroup(List<ShortLinkGroupSortDTO> requestParam);
 }
