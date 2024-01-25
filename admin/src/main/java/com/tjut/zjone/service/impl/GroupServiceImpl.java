@@ -4,9 +4,11 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.tjut.zjone.common.biz.user.UserContext;
 import com.tjut.zjone.dao.entity.GroupDO;
 import com.tjut.zjone.dao.mapper.GroupMapper;
 import com.tjut.zjone.dto.req.GroupSaveNameReqDTO;
+import com.tjut.zjone.dto.req.ShortLinkGroupUpdateReqDTO;
 import com.tjut.zjone.dto.resp.ShortLinkGroupListRespDTO;
 import com.tjut.zjone.service.GroupService;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
          }
         GroupDO groupDO = GroupDO.builder()
                 .sortOrder(0)
+                .username(UserContext.getUsername())
                 .name(requestParam.getName())
                 .gid(gid)
                 .build();
@@ -43,16 +46,27 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
     public List<ShortLinkGroupListRespDTO> getGroupList() {
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getDelFlag, 0)
-                .eq(GroupDO::getUsername, "yujie")
+                .eq(GroupDO::getUsername, UserContext.getUsername())
                 .orderByDesc(GroupDO::getSortOrder);
         List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
         return BeanUtil.copyToList(groupDOList, ShortLinkGroupListRespDTO.class);
     }
 
+    @Override
+    public void updateGroup(ShortLinkGroupUpdateReqDTO requestParam) {
+        LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                .eq(GroupDO::getDelFlag, 0)
+                .eq(GroupDO::getGid, requestParam.getGid())
+                .eq(GroupDO::getUsername, UserContext.getUsername());
+        GroupDO groupDO = new GroupDO();
+        groupDO.setName(requestParam.getName());
+        baseMapper.update(groupDO, queryWrapper);
+    }
+
     public boolean gidIfAbsent(String gid){
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getGid, gid)
-                .eq(GroupDO::getUsername,null);
+                .eq(GroupDO::getUsername,UserContext.getUsername());
         GroupDO one = baseMapper.selectOne(queryWrapper);
         return one != null;
     }

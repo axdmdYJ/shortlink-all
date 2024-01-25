@@ -3,6 +3,7 @@ package com.tjut.zjone.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tjut.zjone.dao.entity.GroupDO;
 import com.tjut.zjone.dto.req.GroupSaveNameReqDTO;
+import com.tjut.zjone.dto.req.ShortLinkGroupUpdateReqDTO;
 import com.tjut.zjone.dto.resp.ShortLinkGroupListRespDTO;
 
 import java.util.List;
@@ -24,4 +25,5 @@ public interface GroupService extends IService<GroupDO> {
     List<ShortLinkGroupListRespDTO> getGroupList();
 
 
+    void updateGroup(ShortLinkGroupUpdateReqDTO requestParam);
 }

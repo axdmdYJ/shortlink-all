@@ -3,13 +3,11 @@ package com.tjut.zjone.controller;
 import com.tjut.zjone.common.convention.result.Result;
 import com.tjut.zjone.common.convention.result.Results;
 import com.tjut.zjone.dto.req.GroupSaveNameReqDTO;
+import com.tjut.zjone.dto.req.ShortLinkGroupUpdateReqDTO;
 import com.tjut.zjone.dto.resp.ShortLinkGroupListRespDTO;
 import com.tjut.zjone.service.GroupService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -30,6 +28,12 @@ public class GroupController {
     public Result<List<ShortLinkGroupListRespDTO>> listGroup(){
         List<ShortLinkGroupListRespDTO> groupList = groupService.getGroupList();
         return Results.success(groupList);
+    }
+
+    @PutMapping("/api/short-link/admin/v1/group")
+    public Result<Void> updateGroup(@RequestBody ShortLinkGroupUpdateReqDTO requestParam){
+        groupService.updateGroup(requestParam);
+        return Results.success();
     }
 
 }

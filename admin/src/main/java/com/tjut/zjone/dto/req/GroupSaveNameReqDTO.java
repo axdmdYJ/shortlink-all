@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class GroupSaveNameReqDTO {
 
-    String name;
+    private String name;
 
 }
