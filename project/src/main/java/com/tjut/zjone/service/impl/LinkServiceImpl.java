@@ -2,13 +2,16 @@ package com.tjut.zjone.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tjut.zjone.common.convention.exception.ServiceException;
 import com.tjut.zjone.dao.entity.LinkDO;
 import com.tjut.zjone.dao.mapper.LinkMapper;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
+import com.tjut.zjone.dto.req.ShortLinkPageReqDTO;
 import com.tjut.zjone.dto.resp.ShortLinkCreateRespDTO;
+import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
 import com.tjut.zjone.service.LinkService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +58,16 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                 .gid(requestParam.getGid())
                 .originUrl(requestParam.getOriginUrl())
                 .build();
+    }
+
+    @Override
+    public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
+        LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
+                .eq(LinkDO::getDelFlag, 0)
+                .eq(LinkDO::getEnableStatus, 0)
+                .eq(LinkDO::getGid, requestParam.getGid());
+        IPage<LinkDO> page = baseMapper.selectPage(requestParam, queryWrapper);
+        return page.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
     }
 
     public String generateSuffix(ShortLinkCreateReqDTO requestParam){

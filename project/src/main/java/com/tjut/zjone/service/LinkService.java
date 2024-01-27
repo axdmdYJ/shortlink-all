@@ -1,9 +1,12 @@
 package com.tjut.zjone.service;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tjut.zjone.dao.entity.LinkDO;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
+import com.tjut.zjone.dto.req.ShortLinkPageReqDTO;
 import com.tjut.zjone.dto.resp.ShortLinkCreateRespDTO;
+import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
 
 /**
 * @author a0000
@@ -18,4 +21,6 @@ public interface LinkService extends IService<LinkDO> {
      * @return 组标识 完整短链接
      */
     ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam);
+
+    IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam);
 }
