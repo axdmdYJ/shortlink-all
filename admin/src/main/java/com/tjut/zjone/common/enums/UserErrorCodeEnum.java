@@ -4,6 +4,7 @@ import com.tjut.zjone.common.convention.errorcode.IErrorCode;
 
 public enum UserErrorCodeEnum implements IErrorCode {
 
+    USER_TOKEN_FAIL("A000201", "用户token验证失败"),
     USER_NULL("B000200","用户不存在"),
     USER_NAME_EXISTS("B000201","用户名已存在"),
     USER_EXISTS("B000202", "用户记录已存在"),
