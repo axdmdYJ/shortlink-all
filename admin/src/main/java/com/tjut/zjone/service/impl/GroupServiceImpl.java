@@ -2,6 +2,7 @@ package com.tjut.zjone.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tjut.zjone.common.biz.user.UserContext;
@@ -90,6 +91,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
 
 
     }
+
+
 
     public boolean gidIfAbsent(String gid){
         LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)

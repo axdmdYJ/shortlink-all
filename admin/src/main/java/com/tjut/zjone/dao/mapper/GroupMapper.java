@@ -2,6 +2,7 @@ package com.tjut.zjone.dao.mapper;
 
 import com.tjut.zjone.dao.entity.GroupDO;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
 * @author a0000
@@ -9,6 +10,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2024-01-24 19:12:58
 * @Entity com.tjut.zjone.dao.domain.TGroup
 */
+@Mapper
 public interface GroupMapper extends BaseMapper<GroupDO> {
 
 }

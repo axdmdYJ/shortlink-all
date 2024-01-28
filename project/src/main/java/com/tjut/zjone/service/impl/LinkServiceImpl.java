@@ -2,6 +2,7 @@ package com.tjut.zjone.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -10,6 +11,7 @@ import com.tjut.zjone.dao.entity.LinkDO;
 import com.tjut.zjone.dao.mapper.LinkMapper;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkPageReqDTO;
+import com.tjut.zjone.dto.resp.GroupLinkCountRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkCreateRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
 import com.tjut.zjone.service.LinkService;
@@ -18,6 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
 
 import static com.tjut.zjone.util.HashUtil.hashToBase62;
 
@@ -88,6 +93,17 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
             generate_count++;
         }
         return shortUri;
+    }
+    @Override
+    public List<GroupLinkCountRespDTO> groupLinkCount(List<String>  requestParam) {
+        // select gid,count(*) from t_link where enable_status=0 and gid in requestParam group by gid;
+        QueryWrapper<LinkDO> queryWrapper = Wrappers.query(new LinkDO())
+                .select("gid as gid, count(*) as shortLinkCount")
+                .in("gid", requestParam)
+                .eq("enable_status", 0)
+                .groupBy("gid");
+        List<Map<String, Object>> maps = baseMapper.selectMaps(queryWrapper);
+        return BeanUtil.copyToList(maps, GroupLinkCountRespDTO.class);
     }
 }
 

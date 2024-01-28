@@ -43,4 +43,5 @@ public interface GroupService extends IService<GroupDO> {
      * @param requestParam 短链接分组排序传参
      */
     void sortGroup(List<ShortLinkGroupSortDTO> requestParam);
+
 }
