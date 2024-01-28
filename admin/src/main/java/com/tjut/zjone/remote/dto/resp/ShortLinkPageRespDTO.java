@@ -1,4 +1,4 @@
-package com.tjut.zjone.dto.resp;
+package com.tjut.zjone.remote.dto.resp;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonFormat;
