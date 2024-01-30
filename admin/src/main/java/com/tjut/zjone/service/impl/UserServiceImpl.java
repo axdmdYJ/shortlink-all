@@ -14,11 +14,14 @@ import com.tjut.zjone.common.convention.result.Results;
 import com.tjut.zjone.common.enums.UserErrorCodeEnum;
 import com.tjut.zjone.dao.entity.UserDO;
 import com.tjut.zjone.dao.mapper.UserMapper;
+import com.tjut.zjone.dto.req.GroupSaveNameReqDTO;
 import com.tjut.zjone.dto.resp.UserLoginRespDTO;
 import com.tjut.zjone.dto.resp.UserRespDTO;
 import com.tjut.zjone.dto.req.UserLoginReqDTO;
 import com.tjut.zjone.dto.req.UserRegisterReqDTO;
 import com.tjut.zjone.dto.req.UserUpdateReqDTO;
+import com.tjut.zjone.remote.ShortLinkRemoteService;
+import com.tjut.zjone.service.GroupService;
 import com.tjut.zjone.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBloomFilter;
@@ -44,6 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final UserMapper userMapper;
+    private final GroupService groupService;
     @Override
     public UserRespDTO getUserByUsername(String username) {
             // 调用Mapper方法查询用户
@@ -78,6 +82,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
                     throw new ClientException(UserErrorCodeEnum.USER_SAVE_FAILE);
                 }
                 userRegisterCzachePenetrationBloomFilter.add(registerParam.getUsername());
+                groupService.saveGroupName(registerParam.getUsername(),"默认分组");
             }
         }finally {
             rLock.unlock();

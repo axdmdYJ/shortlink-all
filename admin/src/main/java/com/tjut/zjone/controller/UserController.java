@@ -19,6 +19,7 @@ public class UserController {
 
     @Resource
     private UserService userService;
+
     @GetMapping("/api/short-link/admin/v1/user/{username}")
     public Result<UserRespDTO> getUserByUsername(@PathVariable String username){
        return Results.success(userService.getUserByUsername(username));

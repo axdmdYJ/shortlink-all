@@ -12,10 +12,10 @@ import org.springframework.context.annotation.Configuration;
 public class RBloomFilterConfiguration {
 
     /**
-     * 防止ShortLink查询数据库的布隆过滤器
+     * 防止用户注册查询数据库的布隆过滤器
      */
     @Bean
-    public RBloomFilter<String> ShortLinkCachePenetrationBloomFilter(RedissonClient redissonClient) {
+    public RBloomFilter<String> userRegisterCachePenetrationBloomFilter(RedissonClient redissonClient) {
         RBloomFilter<String> cachePenetrationBloomFilter = redissonClient.getBloomFilter("userRegisterCachePenetrationBloomFilter");
         cachePenetrationBloomFilter.tryInit(1000000L, 0.001);
         return cachePenetrationBloomFilter;
