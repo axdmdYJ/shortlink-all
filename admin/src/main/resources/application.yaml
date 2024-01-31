@@ -8,6 +8,6 @@ spring:
     url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
   data:
     redis:
-      host: 127.0.0.1
+      host: localhost
       port: 6379
 
