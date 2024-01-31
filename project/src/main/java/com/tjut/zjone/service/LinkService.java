@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.tjut.zjone.dao.entity.LinkDO;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkPageReqDTO;
+import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
 import com.tjut.zjone.dto.resp.GroupLinkCountRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkCreateRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
@@ -29,4 +30,5 @@ public interface LinkService extends IService<LinkDO> {
 
     List<GroupLinkCountRespDTO> groupLinkCount(List<String>  requestParam);
 
+    void updateShortLink(ShortLinkUpdateReqDTO requestParam);
 }

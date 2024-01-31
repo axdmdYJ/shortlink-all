@@ -6,6 +6,7 @@ import com.tjut.zjone.common.convention.result.Result;
 import com.tjut.zjone.common.convention.result.Results;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkPageReqDTO;
+import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
 import com.tjut.zjone.dto.resp.GroupLinkCountRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkCreateRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
@@ -34,5 +35,14 @@ public class ShortLinkController {
     @GetMapping("/api/short-link/v1/count")
     public  Result<List<GroupLinkCountRespDTO>> groupShortLinkCount(@RequestParam("requestParam") List<String> requestParam){
         return Results.success(linkService.groupLinkCount(requestParam));
+    }
+
+    /**
+     * 更新短链接
+     */
+    @PostMapping("/api/short-link/v1/update")
+    public Result<Void> shortLinkUpdate(@RequestBody ShortLinkUpdateReqDTO requestParam){
+        linkService.updateShortLink(requestParam);
+        return Results.success();
     }
 }
