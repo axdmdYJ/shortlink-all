@@ -11,6 +11,8 @@ import com.tjut.zjone.dto.resp.GroupLinkCountRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkCreateRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
 import com.tjut.zjone.service.LinkService;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,4 +47,11 @@ public class ShortLinkController {
         linkService.updateShortLink(requestParam);
         return Results.success();
     }
+
+
+    @GetMapping("/{short-uri}")
+    public void restoreUrl(@PathVariable("short-uri") String shortUri, ServletRequest request, ServletResponse response) {
+        linkService.restoreUrl(shortUri, request, response);
+    }
+
 }

@@ -9,6 +9,8 @@ import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
 import com.tjut.zjone.dto.resp.GroupLinkCountRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkCreateRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 import java.util.List;
 
@@ -31,4 +33,6 @@ public interface LinkService extends IService<LinkDO> {
     List<GroupLinkCountRespDTO> groupLinkCount(List<String>  requestParam);
 
     void updateShortLink(ShortLinkUpdateReqDTO requestParam);
+
+    void restoreUrl(String shortUri, ServletRequest request, ServletResponse response);
 }
