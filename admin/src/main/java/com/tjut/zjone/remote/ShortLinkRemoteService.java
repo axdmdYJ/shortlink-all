@@ -5,6 +5,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tjut.zjone.common.convention.result.Result;
+import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
 import com.tjut.zjone.remote.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.zjone.remote.dto.req.ShortLinkPageReqDTO;
 import com.tjut.zjone.remote.dto.resp.GroupLinkCountRespDTO;
@@ -40,5 +41,9 @@ public interface ShortLinkRemoteService {
         String resultStr = HttpUtil.get("http://localhost:8001/api/short-link/v1/count", requestMap);
         return JSON.parseObject(resultStr, new TypeReference<>() {
         });
+    }
+
+    default void updateShortLink(ShortLinkUpdateReqDTO requestParam){
+        HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/update", JSON.toJSONString(requestParam));
     }
 }
