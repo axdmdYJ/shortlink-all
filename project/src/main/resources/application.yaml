@@ -8,5 +8,9 @@ spring:
     url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
   data:
     redis:
-      host: localhost
+      host: 127.0.0.1
       port: 6379
+  mvc:
+    view:
+      prefix: /templates/
+      suffix: .html
