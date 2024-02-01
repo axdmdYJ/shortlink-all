@@ -29,7 +29,8 @@ public class UserTransmitFilter implements Filter {
     private final static List<String> IGNORE_URI = Lists.newArrayList(
         "/api/short-link/admin/v1/user/login",
             "/api/short-link/admin/v1/actual/user/has-username",
-            "/api/short-link/admin/v1/user"
+            "/api/short-link/admin/v1/user",
+            "/api/short-link/admin/v1/title"
     );
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
