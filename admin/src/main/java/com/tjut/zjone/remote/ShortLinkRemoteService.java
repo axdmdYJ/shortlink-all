@@ -6,6 +6,7 @@ import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tjut.zjone.common.convention.result.Result;
 import com.tjut.zjone.dto.req.RecycleBinSaveReqDTO;
+import com.tjut.zjone.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
 import com.tjut.zjone.remote.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.zjone.remote.dto.req.ShortLinkPageReqDTO;
@@ -22,7 +23,7 @@ import java.util.Map;
 public interface ShortLinkRemoteService {
 
     default  Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam){
-        String resultStr = HttpUtil.post("http://localhost:8001/api/short-link/admin/v1/create", JSON.toJSONString(requestParam));
+        String resultStr = HttpUtil.post("http://localhost:8001/api/short-link/v1/create", JSON.toJSONString(requestParam));
         return JSON.parseObject(resultStr, new TypeReference<Result<ShortLinkCreateRespDTO>>() {
         });
     }
@@ -69,5 +70,22 @@ public interface ShortLinkRemoteService {
      */
     default void saveRecycleBin(RecycleBinSaveReqDTO requestParam) {
         HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/save", JSON.toJSONString(requestParam));
+    }
+
+    /**
+     * 分页查询回收站短链接
+     *
+     * @param requestParam 分页短链接请求参数
+     * @return 查询短链接响应
+     */
+//    default Result<IPage<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkPageReqDTO requestParam) {
+    default Result<IPage<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
+        Map<String, Object> requestMap = new HashMap<>();
+        requestMap.put("gidList", requestParam.getGidList());
+        requestMap.put("current", requestParam.getCurrent());
+        requestMap.put("size", requestParam.getSize());
+        String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/page", requestMap);
+        return JSON.parseObject(resultPageStr, new TypeReference<>() {
+        });
     }
 }

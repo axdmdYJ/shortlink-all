@@ -1,10 +1,14 @@
 package com.tjut.zjone.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tjut.zjone.common.convention.result.Result;
 import com.tjut.zjone.common.convention.result.Results;
 import com.tjut.zjone.dto.req.RecycleBinSaveReqDTO;
+import com.tjut.zjone.dto.req.ShortLinkRecycleBinPageReqDTO;
+import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
 import com.tjut.zjone.service.RecycleBinService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,4 +30,9 @@ public class RecycleBinController {
         recycleBinService.saveRecycleBin(requestParam);
         return Results.success();
     }
+
+    @GetMapping("/api/short-link/v1/recycle-bin/page")
+        public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
+            return Results.success(recycleBinService.pageShortLink(requestParam));
+        }
 }
