@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tjut.zjone.dao.entity.LinkDO;
 import com.tjut.zjone.dto.req.RecycleBinRecoverReqDTO;
+import com.tjut.zjone.dto.req.RecycleBinRemoveReqDTO;
 import com.tjut.zjone.dto.req.RecycleBinSaveReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
@@ -29,4 +30,6 @@ public interface RecycleBinService extends IService<LinkDO> {
     IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam);
 
     void recoverRecycleBin(RecycleBinRecoverReqDTO requestParam);
+
+    void removeRecycleBin(RecycleBinRemoveReqDTO requestParam);
 }
