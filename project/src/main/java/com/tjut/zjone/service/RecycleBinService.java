@@ -3,6 +3,7 @@ package com.tjut.zjone.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tjut.zjone.dao.entity.LinkDO;
+import com.tjut.zjone.dto.req.RecycleBinRecoverReqDTO;
 import com.tjut.zjone.dto.req.RecycleBinSaveReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
@@ -26,4 +27,6 @@ public interface RecycleBinService extends IService<LinkDO> {
      * @return 短链接分页返回结果
      */
     IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam);
+
+    void recoverRecycleBin(RecycleBinRecoverReqDTO requestParam);
 }

@@ -3,6 +3,7 @@ package com.tjut.zjone.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tjut.zjone.common.convention.result.Result;
 import com.tjut.zjone.common.convention.result.Results;
+import com.tjut.zjone.dto.req.RecycleBinRecoverReqDTO;
 import com.tjut.zjone.dto.req.RecycleBinSaveReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
@@ -35,4 +36,14 @@ public class RecycleBinController {
         public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
             return Results.success(recycleBinService.pageShortLink(requestParam));
         }
+
+
+    /**
+     * 恢复短链接
+     */
+    @PostMapping("/api/short-link/v1/recycle-bin/recover")
+    public Result<Void> recoverRecycleBin(@RequestBody RecycleBinRecoverReqDTO requestParam) {
+        recycleBinService.recoverRecycleBin(requestParam);
+        return Results.success();
+    }
 }

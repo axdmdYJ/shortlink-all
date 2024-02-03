@@ -7,6 +7,7 @@ import com.tjut.zjone.dto.req.RecycleBinSaveReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.tjut.zjone.remote.RecycleBinService;
 import com.tjut.zjone.remote.ShortLinkRemoteService;
+import com.tjut.zjone.remote.dto.req.RecycleBinRecoverReqDTO;
 import com.tjut.zjone.remote.dto.resp.ShortLinkPageRespDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,5 +45,16 @@ public class RecycleBinController {
     @GetMapping("/api/short-link/admin/v1/recycle-bin/page")
     public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
         return recycleBinService.pageRecycleBinShortLink(requestParam);
+    }
+
+
+
+    /**
+     * 恢复短链接
+     */
+    @PostMapping("/api/short-link/admin/v1/recycle-bin/recover")
+    public Result<Void> recoverRecycleBin(@RequestBody RecycleBinRecoverReqDTO requestParam) {
+        shortLinkRemoteService.recoverRecycleBin(requestParam);
+        return Results.success();
     }
 }
