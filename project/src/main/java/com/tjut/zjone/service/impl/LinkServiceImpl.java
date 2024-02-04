@@ -1,6 +1,8 @@
 package com.tjut.zjone.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.Week;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -11,8 +13,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tjut.zjone.common.convention.exception.ClientException;
 import com.tjut.zjone.common.convention.exception.ServiceException;
 import com.tjut.zjone.common.enums.VailDateTypeEnum;
+import com.tjut.zjone.dao.entity.LinkAccessStatsDO;
 import com.tjut.zjone.dao.entity.LinkDO;
 import com.tjut.zjone.dao.entity.ShortLinkGotoDO;
+import com.tjut.zjone.dao.mapper.LinkAccessStatsMapper;
 import com.tjut.zjone.dao.mapper.LinkMapper;
 import com.tjut.zjone.dao.mapper.ShortLinkGotoMapper;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
@@ -67,6 +71,8 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
 
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
+    private final LinkAccessStatsMapper linkAccessStatsMapper;
+
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
         String suffix = generateSuffix(requestParam);
@@ -204,6 +210,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         String originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
         // 2.1 如果存在，跳转，直接返回
         if (StrUtil.isNotBlank(originalLink)) {
+            shortLinkStats(fullShortUrl, null, request, response);
             ((HttpServletResponse) response).sendRedirect(originalLink);
             return;
         }
@@ -229,6 +236,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
             originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
             // 5.1 存在，仍然跳转
             if (StrUtil.isNotBlank(originalLink)) {
+                shortLinkStats(fullShortUrl, null, request, response);
                 ((HttpServletResponse) response).sendRedirect(originalLink);
                 return;
             }
@@ -261,12 +269,39 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                     shortLinkDO.getOriginUrl(),
                     LinkUtil.getLinkCacheValidTime(shortLinkDO.getValidDate()), TimeUnit.MILLISECONDS
             );
+            shortLinkStats(fullShortUrl,  shortLinkDO.getGid(), request, response);
             ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
         } finally {
             lock.unlock();
         }
     }
 
+    private void shortLinkStats(String fullShortUrl, String gid, ServletRequest request, ServletResponse response) {
+        try {
+            if (StrUtil.isBlank(gid)) {
+                LambdaQueryWrapper<ShortLinkGotoDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
+                        .eq(ShortLinkGotoDO::getFullShortUrl, fullShortUrl);
+                ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(queryWrapper);
+                gid = shortLinkGotoDO.getGid();
+            }
+            int hour = DateUtil.hour(new Date(), true);
+            Week week = DateUtil.dayOfWeekEnum(new Date());
+            int weekValue = week.getIso8601Value();
+            LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
+                    .pv(1)
+                    .uv(1)
+                    .uip(1)
+                    .hour(hour)
+                    .weekday(weekValue)
+                    .fullShortUrl(fullShortUrl)
+                    .gid(gid)
+                    .date(new Date())
+                    .build();
+            linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+        } catch (Throwable ex) {
+            log.error("短链接访问量统计异常", ex);
+        }
+    }
     @SneakyThrows
     private String getFavicon(String url) {
         URL targetUrl = new URL(url);
