@@ -6,6 +6,9 @@ import cn.hutool.core.date.Week;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -17,8 +20,10 @@ import com.tjut.zjone.common.convention.exception.ServiceException;
 import com.tjut.zjone.common.enums.VailDateTypeEnum;
 import com.tjut.zjone.dao.entity.LinkAccessStatsDO;
 import com.tjut.zjone.dao.entity.LinkDO;
+import com.tjut.zjone.dao.entity.LinkLocaleStatsDO;
 import com.tjut.zjone.dao.entity.ShortLinkGotoDO;
 import com.tjut.zjone.dao.mapper.LinkAccessStatsMapper;
+import com.tjut.zjone.dao.mapper.LinkLocaleStatsMapper;
 import com.tjut.zjone.dao.mapper.LinkMapper;
 import com.tjut.zjone.dao.mapper.ShortLinkGotoMapper;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
@@ -43,6 +48,7 @@ import org.jsoup.nodes.Element;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -54,6 +60,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.tjut.zjone.common.constant.RedisKeyConstant.*;
+import static com.tjut.zjone.common.constant.ShortLinkConstant.AMAP_REMOTE_URL;
 import static com.tjut.zjone.util.HashUtil.hashToBase62;
 
 /**
@@ -74,6 +81,10 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
+    private final LinkLocaleStatsMapper linkLocaleStatsMapper;
+
+    @Value("${short-link.stats.locale.amap-key}")
+    private String statsLocaleAmapKey;
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
@@ -305,13 +316,17 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                             // 如果 added 为 null，说明添加操作失败或出现异常。
                             // 如果 added 为 0，说明该 UV 已经存在于集合中，不是用户的首次访问。
                             // 如果 added 大于 0，说明成功将新的 UV 添加到集合中，标记用户是首次访问。
-                            Long added = stringRedisTemplate.opsForSet().add("short-link:stats:uv:" + fullShortUrl, each);
-                            uvFirstFlag.set(added != null && added > 0L);
+                            Long uvAdded = stringRedisTemplate.opsForSet().add("short-link:stats:uv:" + fullShortUrl, each);
+                            uvFirstFlag.set(uvAdded != null && uvAdded > 0L);
                         }, addResponseCookieTask);
             } else {
                 addResponseCookieTask.run();
             }
-
+            // 获取用户地址ip
+            String remoteAddr = LinkUtil.getActualIp(((HttpServletRequest) request));
+            // 看是否是第一次点击
+            Long uipAdded = stringRedisTemplate.opsForSet().add("short-link:stats:uip:" + fullShortUrl, remoteAddr);
+            boolean uipFirstFlag = uipAdded != null && uipAdded > 0L;
             if (StrUtil.isBlank(gid)) {
                 LambdaQueryWrapper<ShortLinkGotoDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkGotoDO.class)
                         .eq(ShortLinkGotoDO::getFullShortUrl, fullShortUrl);
@@ -324,7 +339,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
             LinkAccessStatsDO linkAccessStatsDO = LinkAccessStatsDO.builder()
                     .pv(1)
                     .uv(uvFirstFlag.get() ? 1 : 0)
-                    .uip(1)
+                    .uip(uipFirstFlag ? 1 : 0)
                     .hour(hour)
                     .weekday(weekValue)
                     .fullShortUrl(fullShortUrl)
@@ -332,6 +347,31 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                     .date(new Date())
                     .build();
             linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+            Map<String, Object> localeParamMap = new HashMap<>();
+            // 获取高德api请求参数
+            localeParamMap.put("key", statsLocaleAmapKey);
+            localeParamMap.put("ip", remoteAddr);
+            String localeResultStr = HttpUtil.get(AMAP_REMOTE_URL, localeParamMap);
+            // 将高德api返回信息转换成对象，然后获取返回信息
+            JSONObject localeResultObj = JSON.parseObject(localeResultStr);
+            String infoCode = localeResultObj.getString("infocode");
+            if (StrUtil.isNotBlank(infoCode) && StrUtil.equals(infoCode, "10000")) {
+                String province = localeResultObj.getString("province");
+                // 判断是不是未知，如果不是，就将信息存到数据库中
+                boolean unknownFlag = StrUtil.equals(province, "[]");
+                LinkLocaleStatsDO linkLocaleStatsDO = LinkLocaleStatsDO.builder()
+                        .province(unknownFlag ? "未知" : province)
+                        .city(unknownFlag ? "未知" : localeResultObj.getString("city"))
+                        .adcode(unknownFlag ? "未知" : localeResultObj.getString("adcode"))
+                        .cnt(1)
+                        .fullShortUrl(fullShortUrl)
+                        .country("中国")
+                        .gid(gid)
+                        .date(new Date())
+                        .build();
+                linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
+            }
+
         } catch (Throwable ex) {
             log.error("短链接访问量统计异常", ex);
         }
