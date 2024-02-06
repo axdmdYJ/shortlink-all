@@ -18,14 +18,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tjut.zjone.common.convention.exception.ClientException;
 import com.tjut.zjone.common.convention.exception.ServiceException;
 import com.tjut.zjone.common.enums.VailDateTypeEnum;
-import com.tjut.zjone.dao.entity.LinkAccessStatsDO;
-import com.tjut.zjone.dao.entity.LinkDO;
-import com.tjut.zjone.dao.entity.LinkLocaleStatsDO;
-import com.tjut.zjone.dao.entity.ShortLinkGotoDO;
-import com.tjut.zjone.dao.mapper.LinkAccessStatsMapper;
-import com.tjut.zjone.dao.mapper.LinkLocaleStatsMapper;
-import com.tjut.zjone.dao.mapper.LinkMapper;
-import com.tjut.zjone.dao.mapper.ShortLinkGotoMapper;
+import com.tjut.zjone.dao.entity.*;
+import com.tjut.zjone.dao.mapper.*;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkPageReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
@@ -82,6 +76,9 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
     private final RedissonClient redissonClient;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
     private final LinkLocaleStatsMapper linkLocaleStatsMapper;
+    private final LinkOsStatsMapper linkOsStatsMapper;
+    private final LinkBrowserStatsMapper linkBrowserStatsMapper;
+
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
@@ -370,7 +367,25 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                         .date(new Date())
                         .build();
                 linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
+                // 监控操作系统访问
+                LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
+                        .os(LinkUtil.getOs(((HttpServletRequest) request)))
+                        .cnt(1)
+                        .gid(gid)
+                        .fullShortUrl(fullShortUrl)
+                        .date(new Date())
+                        .build();
+                linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
+                LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
+                        .browser(LinkUtil.getBrowser(((HttpServletRequest) request)))
+                        .cnt(1)
+                        .gid(gid)
+                        .fullShortUrl(fullShortUrl)
+                        .date(new Date())
+                        .build();
+                linkBrowserStatsMapper.shortLinkBrowserState(linkBrowserStatsDO);
             }
+
 
         } catch (Throwable ex) {
             log.error("短链接访问量统计异常", ex);
