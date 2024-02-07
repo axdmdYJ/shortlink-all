@@ -1,21 +1,19 @@
 package com.tjut.zjone.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.tjut.zjone.dao.entity.LinkAccessStatsDO;
-import com.tjut.zjone.dao.entity.LinkDeviceStatsDO;
-import com.tjut.zjone.dao.entity.LinkLocaleStatsDO;
-import com.tjut.zjone.dao.entity.LinkNetworkStatsDO;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.tjut.zjone.dao.entity.*;
 import com.tjut.zjone.dao.mapper.*;
+import com.tjut.zjone.dto.req.ShortLinkStatsAccessRecordReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkStatsReqDTO;
 import com.tjut.zjone.dto.resp.*;
 import com.tjut.zjone.service.ShortLinkStatsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -78,10 +76,10 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
         // 一周访问详情
         List<Integer> weekdayStats = new ArrayList<>();
         List<LinkAccessStatsDO> listWeekdayStatsByShortLink = linkAccessStatsMapper.listWeekdayStatsByShortLink(requestParam);
-        for (int i = 0; i < 8; i++) {
+        for (int i = 1; i < 8; i++) {
             AtomicInteger weekday = new AtomicInteger(i);
             int weekdayCnt = listWeekdayStatsByShortLink.stream()
-                    .filter(each -> Objects.equals(each.getHour(), weekday.get()))
+                    .filter(each -> Objects.equals(each.getWeekday(), weekday.get()))
                     .findFirst()
                     .map(LinkAccessStatsDO::getPv)
                     .orElse(0);
@@ -186,4 +184,59 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
                 .networkStats(networkStats)
                 .build();
     }
+
+
+
+    /**
+     * 根据短链接监控访问记录请求参数查询短链接访问统计信息
+     *
+     * @param requestParam 短链接监控访问记录请求参数对象
+     * @return 返回短链接访问记录的分页统计信息
+     */
+    @Override
+    public IPage<ShortLinkStatsAccessRecordRespDTO> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
+        // 根据Gid, fullShortUrl， 以及时间区间来构建查询条件
+        LambdaQueryWrapper<LinkAccessLogsDO> queryWrapper = Wrappers.lambdaQuery(LinkAccessLogsDO.class)
+                .eq(LinkAccessLogsDO::getGid, requestParam.getGid())
+                .eq(LinkAccessLogsDO::getFullShortUrl, requestParam.getFullShortUrl())
+                .between(LinkAccessLogsDO::getCreateTime, requestParam.getStartDate(), requestParam.getEndDate())
+                .eq(LinkAccessLogsDO::getDelFlag, 0)
+                .orderByDesc(LinkAccessLogsDO::getCreateTime);
+
+        // 根据上面的查询条件以及请求参数，构建一个分页对象
+        IPage<LinkAccessLogsDO> linkAccessLogsDOIPage = linkAccessLogsMapper.selectPage(requestParam, queryWrapper);
+
+        // 将 LinkAccessLogsDO 转换为 ShortLinkStatsAccessRecordRespDTO
+        IPage<ShortLinkStatsAccessRecordRespDTO> actualResult = linkAccessLogsDOIPage.convert(
+                each -> BeanUtil.toBean(each, ShortLinkStatsAccessRecordRespDTO.class));
+
+        // 提取查询结果中的用户列表
+        List<String> userAccessLogsList = actualResult.getRecords().stream()
+                .map(ShortLinkStatsAccessRecordRespDTO::getUser)
+                .toList();
+
+        // 使用自定义的查询方法获取用户访问类型信息
+        List<Map<String, Object>> uvTypeList = linkAccessLogsMapper.selectUvTypeByUsers(
+                requestParam.getGid(),
+                requestParam.getFullShortUrl(),
+                requestParam.getStartDate(),
+                requestParam.getEndDate(),
+                userAccessLogsList
+        );
+
+        // 将获取到的用户访问类型信息设置到实际结果中
+        actualResult.getRecords().forEach(each -> {
+            String uvType = uvTypeList.stream()
+                    .filter(item -> Objects.equals(each.getUser(), item.get("user")))
+                    .findFirst()
+                    .map(item -> item.get("UvType"))
+                    .map(Object::toString)
+                    .orElse("旧访客");
+            each.setUvType(uvType);
+        });
+
+        // 返回最终的短链接访问记录的分页统计信息
+        return actualResult;
+    }
+
 }

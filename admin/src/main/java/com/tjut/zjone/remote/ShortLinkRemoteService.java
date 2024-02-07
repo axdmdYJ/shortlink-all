@@ -1,5 +1,6 @@
 package com.tjut.zjone.remote;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
@@ -12,9 +13,11 @@ import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
 import com.tjut.zjone.remote.dto.req.RecycleBinRecoverReqDTO;
 import com.tjut.zjone.remote.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.zjone.remote.dto.req.ShortLinkPageReqDTO;
+import com.tjut.zjone.remote.dto.req.ShortLinkStatsAccessRecordReqDTO;
 import com.tjut.zjone.remote.dto.resp.GroupLinkCountRespDTO;
 import com.tjut.zjone.remote.dto.resp.ShortLinkCreateRespDTO;
 import com.tjut.zjone.remote.dto.resp.ShortLinkPageRespDTO;
+import com.tjut.zjone.remote.dto.resp.ShortLinkStatsAccessRecordRespDTO;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -24,23 +27,23 @@ import java.util.Map;
 
 public interface ShortLinkRemoteService {
 
-    default  Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam){
+    default Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam) {
         String resultStr = HttpUtil.post("http://localhost:8001/api/short-link/v1/create", JSON.toJSONString(requestParam));
         return JSON.parseObject(resultStr, new TypeReference<Result<ShortLinkCreateRespDTO>>() {
         });
     }
 
-    default  Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam){
+    default Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam) {
         Map<String, Object> requestMap = new HashMap<>();
-        requestMap.put("gid",requestParam.getGid());
-        requestMap.put("current",requestParam.getCurrent());
-        requestMap.put("size",requestParam.getSize());
+        requestMap.put("gid", requestParam.getGid());
+        requestMap.put("current", requestParam.getCurrent());
+        requestMap.put("size", requestParam.getSize());
         String resultStr = HttpUtil.get("http://localhost:8001/api/short-link/admin/v1/page", requestMap);
         return JSON.parseObject(resultStr, new TypeReference<>() {
         });
     }
 
-    default Result<List<GroupLinkCountRespDTO>> groupShortLinkCount(List<String> requestParam){
+    default Result<List<GroupLinkCountRespDTO>> groupShortLinkCount(List<String> requestParam) {
         Map<String, Object> requestMap = new HashMap<>();
         requestMap.put("requestParam", requestParam);
         String resultStr = HttpUtil.get("http://localhost:8001/api/short-link/v1/count", requestMap);
@@ -48,9 +51,10 @@ public interface ShortLinkRemoteService {
         });
     }
 
-    default void updateShortLink(ShortLinkUpdateReqDTO requestParam){
+    default void updateShortLink(ShortLinkUpdateReqDTO requestParam) {
         HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/update", JSON.toJSONString(requestParam));
     }
+
     /**
      * 根据 URL 获取标题
      *
@@ -62,7 +66,6 @@ public interface ShortLinkRemoteService {
         return JSON.parseObject(resultStr, new TypeReference<>() {
         });
     }
-
 
 
     /**
@@ -109,5 +112,21 @@ public interface ShortLinkRemoteService {
      */
     default void removeRecycleBin(RecycleBinRemoveReqDTO requestParam) {
         HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/remove", JSON.toJSONString(requestParam));
+    }
+
+
+    /**
+     * 访问单个短链接指定时间内监控访问记录数据
+     *
+     * @param requestParam 访问短链接监控访问记录请求参数
+     * @return 短链接监控访问记录信息
+     */
+    default Result<IPage<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
+        Map<String, Object> stringObjectMap = BeanUtil.beanToMap(requestParam, false, true);
+        stringObjectMap.remove("orders");
+        stringObjectMap.remove("records");
+        String resultBodyStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/stats/access-record", stringObjectMap);
+        return JSON.parseObject(resultBodyStr, new TypeReference<>() {
+        });
     }
 }
