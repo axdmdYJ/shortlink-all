@@ -59,6 +59,23 @@ public class LinkDO implements Serializable {
      * 网站图标
      */
     private String favicon;
+
+
+    /**
+     * 历史PV
+     */
+    private Integer totalPv;
+
+    /**
+     * 历史UV
+     */
+    private Integer totalUv;
+
+    /**
+     * 历史UIP
+     */
+    private Integer totalUip;
+
     /**
      * 启用标识 0：未启用 1：已启用
      */

@@ -43,6 +43,37 @@ public class ShortLinkPageRespDTO {
      */
     private String favicon;
 
+
+    /**
+     * 历史PV
+     */
+    private Integer totalPv;
+
+    /**
+     * 今日PV
+     */
+    private Integer toDayPv;
+
+    /**
+     * 历史UV
+     */
+    private Integer totalUv;
+
+    /**
+     * 今日UV
+     */
+    private Integer toDayUv;
+
+    /**
+     * 历史UIP
+     */
+    private Integer totalUIp;
+
+    /**
+     * 今日UIP
+     */
+    private Integer toDayUIp;
+
     /**
      * 有效期类型 0：永久有效 1：用户自定义
      */
