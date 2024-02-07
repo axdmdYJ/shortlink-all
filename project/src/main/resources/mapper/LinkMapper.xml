@@ -1,32 +1,88 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one or more
+  ~ contributor license agreements.  See the NOTICE file distributed with
+  ~ this work for additional information regarding copyright ownership.
+  ~ The ASF licenses this file to You under the Apache License, Version 2.0
+  ~ (the "License"); you may not use this file except in compliance with
+  ~ the License.  You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.tjut.zjone.dao.mapper.LinkMapper">
 
-    <resultMap id="BaseResultMap" type="com.tjut.zjone.dao.entity.LinkDO">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="domain" column="domain" jdbcType="VARCHAR"/>
-            <result property="shortUri" column="short_uri" jdbcType="VARCHAR"/>
-            <result property="fullShortUrl" column="full_short_url" jdbcType="VARCHAR"/>
-            <result property="originUrl" column="origin_url" jdbcType="VARCHAR"/>
-            <result property="clickNum" column="click_num" jdbcType="INTEGER"/>
-            <result property="gid" column="gid" jdbcType="VARCHAR"/>
-            <result property="enableStatus" column="enable_status" jdbcType="TINYINT"/>
-            <result property="createdType" column="created_type" jdbcType="TINYINT"/>
-            <result property="validDateType" column="valid_date_type" jdbcType="TINYINT"/>
-            <result property="validDate" column="valid_date" jdbcType="TIMESTAMP"/>
-            <result property="describe" column="describe" jdbcType="VARCHAR"/>
-            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
-            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
-            <result property="delFlag" column="del_flag" jdbcType="TINYINT"/>
-    </resultMap>
+    <!-- 分页查询短链接 -->
+    <select id="pageLink" parameterType="com.tjut.zjone.dto.req.ShortLinkPageReqDTO"
+            resultType="com.tjut.zjone.dao.entity.LinkDO">
+        SELECT t.*,
+        COALESCE(s.today_pv, 0) AS todayPv,
+        COALESCE(s.today_uv, 0) AS todayUv,
+        COALESCE(s.today_uip, 0) AS todayUip
+        FROM t_link t
+        LEFT JOIN t_link_stats_today s ON t.gid = s.gid
+        AND t.full_short_url = s.full_short_url
+        AND s.date = CURDATE()
+        WHERE t.gid = #{gid}
+        AND t.enable_status = 0
+        AND t.del_flag = 0
+        <choose>
+            <when test="orderTag == 'todayPv'">
+                ORDER BY todayPv DESC
+            </when>
+            <when test="orderTag == 'todayUv'">
+                ORDER BY todayUv DESC
+            </when>
+            <when test="orderTag == 'todayUip'">
+                ORDER BY todayUip DESC
+            </when>
+            <when test="orderTag == 'totalPv'">
+                ORDER BY t.total_uv DESC
+            </when>
+            <when test="orderTag == 'totalUv'">
+                ORDER BY t.total_pv DESC
+            </when>
+            <when test="orderTag == 'totalUip'">
+                ORDER BY t.total_uip DESC
+            </when>
+            <otherwise>
+                ORDER BY t.create_time DESC
+            </otherwise>
+        </choose>
+    </select>
+<!--    &#45;&#45; 选择 t_link 表中的字段以及 t_link_stats_today 表中的今日 PV、UV、UIP 数据
+        使用 COALESCE 函数处理可能的 NULL 值。
+-->
+<!--    SELECT t.*,-->
+<!--    COALESCE(s.today_pv, 0) AS todayPv,-->
+<!--    COALESCE(s.today_uv, 0) AS todayUv,-->
+<!--    COALESCE(s.today_uip, 0) AS todayUip-->
+<!--    FROM t_link t-->
+<!--    &#45;&#45; 左连接 t_link_stats_today 表，关联条件包括 gid、full_short_url 和今日日期-->
+<!--    LEFT JOIN t_link_stats_today s ON t.gid = s.gid-->
+<!--    AND t.full_short_url = s.full_short_url-->
+<!--    AND s.date = CURDATE()-->
+<!--    &#45;&#45; 筛选 t_link 表中符合条件的记录-->
+<!--    WHERE t.gid = 'your_gid'-->
+<!--    AND t.enable_status = 0-->
+<!--    AND t.del_flag = 0-->
+<!--    &#45;&#45; 根据条件选择不同的排序方式-->
+<!--    ORDER BY-->
+<!--    CASE-->
+<!--    WHEN 'your_orderTag' = 'todayPv' THEN todayPv-->
+<!--    WHEN 'your_orderTag' = 'todayUv' THEN todayUv-->
+<!--    WHEN 'your_orderTag' = 'todayUip' THEN todayUip-->
+<!--    WHEN 'your_orderTag' = 'totalPv' THEN t.total_uv-->
+<!--    WHEN 'your_orderTag' = 'totalUv' THEN t.total_pv-->
+<!--    WHEN 'your_orderTag' = 'totalUip' THEN t.total_uip-->
+<!--    ELSE t.create_time-->
+<!--    END DESC;-->
 
-    <sql id="Base_Column_List">
-        id,domain,short_uri,
-        full_short_url,origin_url,click_num,
-        gid,enable_status,created_type,
-        valid_date_type,valid_date,describe,
-        create_time,update_time,del_flag
-    </sql>
 </mapper>

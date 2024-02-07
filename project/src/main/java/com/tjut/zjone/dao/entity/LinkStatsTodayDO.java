@@ -3,12 +3,18 @@ package com.tjut.zjone.dao.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
 @TableName("t_link_stats_today")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class LinkStatsTodayDO {
 
     /**
@@ -44,8 +50,7 @@ public class LinkStatsTodayDO {
     /**
      * 今日ip数
      */
-    private Integer todayIpCount;
-
+    private Integer todayUip;
 
     /**
      * 创建时间

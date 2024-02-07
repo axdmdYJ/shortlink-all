@@ -52,7 +52,7 @@ public class ShortLinkPageRespDTO {
     /**
      * 今日PV
      */
-    private Integer toDayPv;
+    private Integer todayPv;
 
     /**
      * 历史UV
@@ -62,17 +62,17 @@ public class ShortLinkPageRespDTO {
     /**
      * 今日UV
      */
-    private Integer toDayUv;
+    private Integer todayUv;
 
     /**
      * 历史UIP
      */
-    private Integer totalUIp;
+    private Integer totalUip;
 
     /**
      * 今日UIP
      */
-    private Integer toDayUIp;
+    private Integer todayUip;
 
     /**
      * 有效期类型 0：永久有效 1：用户自定义

@@ -82,6 +82,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
     private final LinkAccessLogsMapper linkAccessLogsMapper;
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
+    private final LinkStatsTodayMapper linkStatsTodayMapper;
 
 
 
@@ -98,6 +99,9 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         linkDO.setFullShortUrl(fullShortUrl);
         linkDO.setShortUri(suffix);
         linkDO.setFavicon(getFavicon(requestParam.getOriginUrl()));
+        linkDO.setTotalPv(0);
+        linkDO.setTotalUip(0);
+        linkDO.setTotalUv(0);
         ShortLinkGotoDO linkGotoDO = ShortLinkGotoDO.builder()
                 .fullShortUrl(fullShortUrl)
                 .gid(requestParam.getGid())
@@ -129,12 +133,8 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
 
     @Override
     public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
-        LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
-                .eq(LinkDO::getDelFlag, 0)
-                .eq(LinkDO::getEnableStatus, 0)
-                .eq(LinkDO::getGid, requestParam.getGid());
-        IPage<LinkDO> page = baseMapper.selectPage(requestParam, queryWrapper);
-        return page.convert(each -> {
+        IPage<LinkDO> resultPage = baseMapper.pageLink(requestParam);
+        return resultPage.convert(each -> {
             ShortLinkPageRespDTO result = BeanUtil.toBean(each, ShortLinkPageRespDTO.class);
             result.setDomain("http://" + result.getDomain());
             return result;
@@ -445,6 +445,16 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                         .fullShortUrl(fullShortUrl)
                         .build();
                 linkAccessLogsMapper.insert(linkAccessLogsDO);
+                baseMapper.incrementStats(gid, fullShortUrl, 1, uvFirstFlag.get() ? 1 : 0, uipFirstFlag ? 1 : 0);
+                LinkStatsTodayDO linkStatsTodayDO = LinkStatsTodayDO.builder()
+                        .todayPv(1)
+                        .todayUv(uvFirstFlag.get() ? 1 : 0)
+                        .todayUip(uipFirstFlag ? 1 : 0)
+                        .gid(gid)
+                        .fullShortUrl(fullShortUrl)
+                        .date(new Date())
+                        .build();
+                linkStatsTodayMapper.shortLinkTodayState(linkStatsTodayDO);
             }
         } catch (Throwable ex) {
             log.error("短链接访问量统计异常", ex);
