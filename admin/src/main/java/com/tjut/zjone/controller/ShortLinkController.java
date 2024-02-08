@@ -6,13 +6,8 @@ import com.tjut.zjone.common.convention.result.Result;
 import com.tjut.zjone.common.convention.result.Results;
 import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
 import com.tjut.zjone.remote.ShortLinkRemoteService;
-import com.tjut.zjone.remote.dto.req.ShortLinkCreateReqDTO;
-import com.tjut.zjone.remote.dto.req.ShortLinkPageReqDTO;
-import com.tjut.zjone.remote.dto.req.ShortLinkStatsAccessRecordReqDTO;
-import com.tjut.zjone.remote.dto.resp.GroupLinkCountRespDTO;
-import com.tjut.zjone.remote.dto.resp.ShortLinkCreateRespDTO;
-import com.tjut.zjone.remote.dto.resp.ShortLinkPageRespDTO;
-import com.tjut.zjone.remote.dto.resp.ShortLinkStatsAccessRecordRespDTO;
+import com.tjut.zjone.remote.dto.req.*;
+import com.tjut.zjone.remote.dto.resp.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -54,6 +49,24 @@ public class ShortLinkController {
     @GetMapping("/api/short-link/admin/v1/stats/access-record")
     public Result<IPage<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
         return remoteService.shortLinkStatsAccessRecord(requestParam);
+    }
+
+    /**
+     * 访问分组短链接指定时间内监控数据
+     */
+    @GetMapping("/api/short-link/admin/v1/stats/group")
+    public Result<ShortLinkStatsRespDTO> groupShortLinkStats(ShortLinkGroupStatsReqDTO requestParam) {
+        return remoteService.groupShortLinkStats(requestParam);
+    }
+
+
+
+    /**
+     * 访问分组短链接指定时间内访问记录监控数据
+     */
+    @GetMapping("/api/short-link/admin/v1/stats/access-record/group")
+    public Result<IPage<ShortLinkStatsAccessRecordRespDTO>> groupShortLinkStatsAccessRecord(ShortLinkGroupStatsAccessRecordReqDTO requestParam) {
+        return remoteService.groupShortLinkStatsAccessRecord(requestParam);
     }
 
 }

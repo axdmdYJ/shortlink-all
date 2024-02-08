@@ -1,10 +1,12 @@
-package com.tjut.zjone.dto.resp;
+package com.tjut.zjone.remote.dto.resp;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Date;
 
 /**
  * 短链接基础访问监控响应参数
@@ -18,7 +20,8 @@ public class ShortLinkStatsAccessDailyRespDTO {
     /**
      * 日期
      */
-    private String date;
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+    private Date date;
 
     /**
      * 访问量
