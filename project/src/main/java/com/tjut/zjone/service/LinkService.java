@@ -3,10 +3,12 @@ package com.tjut.zjone.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tjut.zjone.dao.entity.LinkDO;
+import com.tjut.zjone.dto.req.ShortLinkBatchCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkPageReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
 import com.tjut.zjone.dto.resp.GroupLinkCountRespDTO;
+import com.tjut.zjone.dto.resp.ShortLinkBatchCreateRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkCreateRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
 import jakarta.servlet.ServletRequest;
@@ -35,4 +37,13 @@ public interface LinkService extends IService<LinkDO> {
     void updateShortLink(ShortLinkUpdateReqDTO requestParam);
 
     void restoreUrl(String shortUri, ServletRequest request, ServletResponse response);
+
+    /**
+     * 批量创建短链接
+     *
+     * @param requestParam 批量创建短链接请求参数
+     * @return 批量创建短链接返回参数
+     */
+    ShortLinkBatchCreateRespDTO batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam);
+
 }

@@ -8,6 +8,9 @@ import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
 import com.tjut.zjone.remote.ShortLinkRemoteService;
 import com.tjut.zjone.remote.dto.req.*;
 import com.tjut.zjone.remote.dto.resp.*;
+import com.tjut.zjone.util.EasyExcelWebUtil;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.SneakyThrows;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -67,6 +70,20 @@ public class ShortLinkController {
     @GetMapping("/api/short-link/admin/v1/stats/access-record/group")
     public Result<IPage<ShortLinkStatsAccessRecordRespDTO>> groupShortLinkStatsAccessRecord(ShortLinkGroupStatsAccessRecordReqDTO requestParam) {
         return remoteService.groupShortLinkStatsAccessRecord(requestParam);
+    }
+
+
+    /**
+     * 批量创建短链接
+     */
+    @SneakyThrows
+    @PostMapping("/api/short-link/admin/v1/create/batch")
+    public void batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam, HttpServletResponse response) {
+        Result<ShortLinkBatchCreateRespDTO> shortLinkBatchCreateRespDTOResult = remoteService.batchCreateShortLink(requestParam);
+        if (shortLinkBatchCreateRespDTOResult.isSuccess()) {
+            List<ShortLinkBaseInfoRespDTO> baseLinkInfos = shortLinkBatchCreateRespDTOResult.getData().getBaseLinkInfos();
+            EasyExcelWebUtil.write(response, "批量创建短链接-SaaS短链接系统", ShortLinkBaseInfoRespDTO.class, baseLinkInfos);
+        }
     }
 
 }

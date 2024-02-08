@@ -108,10 +108,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
         if(user == null){
             throw new ClientException("用户不存在");
         }
-        Boolean hasedLogin = stringRedisTemplate.hasKey("login_"+requestParam.getUsername());
-        if (hasedLogin !=null && hasedLogin){
-            throw new ClientException("用户已登陆");
-        }
+//        Boolean hasedLogin = stringRedisTemplate.hasKey("login_"+requestParam.getUsername());
+//        if (hasedLogin !=null && hasedLogin){
+//            throw new ClientException("用户已登陆");
+//        }
         String token = UUID.randomUUID().toString();
         //避免重复登陆
         stringRedisTemplate.opsForHash().put("login_"+requestParam.getUsername(), token, JSON.toJSONString(user));

@@ -4,10 +4,12 @@ package com.tjut.zjone.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tjut.zjone.common.convention.result.Result;
 import com.tjut.zjone.common.convention.result.Results;
+import com.tjut.zjone.dto.req.ShortLinkBatchCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkPageReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
 import com.tjut.zjone.dto.resp.GroupLinkCountRespDTO;
+import com.tjut.zjone.dto.resp.ShortLinkBatchCreateRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkCreateRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
 import com.tjut.zjone.service.LinkService;
@@ -53,5 +55,14 @@ public class ShortLinkController {
     public void restoreUrl(@PathVariable("short-uri") String shortUri, ServletRequest request, ServletResponse response) {
         linkService.restoreUrl(shortUri, request, response);
     }
+
+    /**
+     * 批量创建短链接
+     */
+    @PostMapping("/api/short-link/v1/create/batch")
+    public Result<ShortLinkBatchCreateRespDTO> batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam) {
+        return Results.success(linkService.batchCreateShortLink(requestParam));
+    }
+
 
 }

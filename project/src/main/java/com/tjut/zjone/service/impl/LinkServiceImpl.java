@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.Week;
 import cn.hutool.core.lang.UUID;
+import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
@@ -20,12 +21,11 @@ import com.tjut.zjone.common.convention.exception.ServiceException;
 import com.tjut.zjone.common.enums.VailDateTypeEnum;
 import com.tjut.zjone.dao.entity.*;
 import com.tjut.zjone.dao.mapper.*;
+import com.tjut.zjone.dto.req.ShortLinkBatchCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkPageReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
-import com.tjut.zjone.dto.resp.GroupLinkCountRespDTO;
-import com.tjut.zjone.dto.resp.ShortLinkCreateRespDTO;
-import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
+import com.tjut.zjone.dto.resp.*;
 import com.tjut.zjone.service.LinkService;
 import com.tjut.zjone.util.LinkUtil;
 import jakarta.servlet.ServletRequest;
@@ -84,6 +84,11 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
 
+    /**
+     * 开发环境默认域名测试
+     */
+    @Value("${short-link.domain.default}")
+    private String createShortLinkDefaultDomain;
 
 
 
@@ -93,8 +98,14 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
         String suffix = generateSuffix(requestParam);
-        String fullShortUrl = requestParam.getDomain() + "/" + suffix;
+
+//        String fullShortUrl = requestParam.getDomain() + "/" + suffix;
+        String fullShortUrl = StrBuilder.create(createShortLinkDefaultDomain)
+                .append("/")
+                .append(suffix)
+                .toString();
         LinkDO linkDO = BeanUtil.toBean(requestParam, LinkDO.class);
+        linkDO.setDomain(createShortLinkDefaultDomain);
         linkDO.setEnableStatus(0);
         linkDO.setFullShortUrl(fullShortUrl);
         linkDO.setShortUri(suffix);
@@ -221,7 +232,13 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
     public void restoreUrl(String shortUri, ServletRequest request, ServletResponse response) {
         // 1. 先获取整体的短链接
         String serverName = request.getServerName();
-        String fullShortUrl = serverName + "/" + shortUri;
+//        String fullShortUrl = serverName + "/" + shortUri;
+        String serverPort = Optional.of(request.getServerPort())
+                .filter(each -> !Objects.equals(each, 80)) // 过滤掉默认的80端口
+                .map(String::valueOf)
+                .map(each -> ":" + each)
+                .orElse("");
+        String fullShortUrl = serverName + serverPort + "/" + shortUri;
         // 2. 从缓存中获取，看原链接是否存在
         String originalLink = stringRedisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY, fullShortUrl));
         // 2.1 如果存在，跳转，直接返回
@@ -476,6 +493,57 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         }
         return null;
     }
+
+
+    /**
+     * 批量创建短链接并返回结果
+     *
+     * @param requestParam 包含批量创建所需参数的请求DTO
+     * @return 包含批量创建结果的响应DTO
+     */
+    @Override
+    public ShortLinkBatchCreateRespDTO batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam) {
+        // 从请求DTO中获取原始URL列表和描述信息列表
+        List<String> originUrls = requestParam.getOriginUrls();
+        List<String> describes = requestParam.getDescribes();
+
+        // 用于存储批量创建结果的列表
+        List<ShortLinkBaseInfoRespDTO> result = new ArrayList<>();
+
+        // 遍历原始URL列表，逐个创建短链接
+        for (int i = 0; i < originUrls.size(); i++) {
+            // 创建用于单个短链接创建的请求DTO，并设置对应的原始URL和描述信息
+            ShortLinkCreateReqDTO shortLinkCreateReqDTO = BeanUtil.toBean(requestParam, ShortLinkCreateReqDTO.class);
+            shortLinkCreateReqDTO.setOriginUrl(originUrls.get(i));
+            shortLinkCreateReqDTO.setDescribe(describes.get(i));
+
+            try {
+                // 调用单个短链接创建方法
+                ShortLinkCreateRespDTO shortLink = createShortLink(shortLinkCreateReqDTO);
+
+                // 构建单个短链接的基本信息响应DTO
+                ShortLinkBaseInfoRespDTO linkBaseInfoRespDTO = ShortLinkBaseInfoRespDTO.builder()
+                        .fullShortUrl(shortLink.getFullShortUrl())
+                        .originUrl(shortLink.getOriginUrl())
+                        .describe(describes.get(i))
+                        .build();
+
+                // 将单个短链接的基本信息添加到结果列表中
+                result.add(linkBaseInfoRespDTO);
+            } catch (Throwable ex) {
+                // 如果创建短链接过程中发生异常，记录错误日志，并继续处理下一个原始URL
+                log.error("批量创建短链接失败，原始参数：{}", originUrls.get(i));
+            }
+        }
+
+        // 构建批量创建短链接的响应DTO，包含总数和各个短链接的基本信息列表
+        return ShortLinkBatchCreateRespDTO.builder()
+                .total(result.size())
+                .baseLinkInfos(result)
+                .build();
+    }
+
+
 }
 
 
