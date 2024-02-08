@@ -1,18 +1,20 @@
 package com.tjut.zjone.dto.resp;
 
-
 import lombok.Data;
 
+/**
+ * 短链接分组查询返回参数
+ */
 @Data
-public class GroupLinkCountRespDTO {
-
+public class ShortLinkGroupCountQueryRespDTO {
 
     /**
-     * 短链接标识
+     * 分组标识
      */
     private String gid;
+
     /**
-     * 链接数量
+     * 短链接数量
      */
     private Integer shortLinkCount;
 }

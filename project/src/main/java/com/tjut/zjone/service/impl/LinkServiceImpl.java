@@ -173,28 +173,38 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         return shortUri;
     }
     @Override
-    public List<GroupLinkCountRespDTO> groupLinkCount(List<String>  requestParam) {
-        // select gid,count(*) from t_link where enable_status=0 and gid in requestParam group by gid;
+    public List<ShortLinkGroupCountQueryRespDTO> listGroupShortLinkCount(List<String> requestParam) {
         QueryWrapper<LinkDO> queryWrapper = Wrappers.query(new LinkDO())
                 .select("gid as gid, count(*) as shortLinkCount")
                 .in("gid", requestParam)
                 .eq("enable_status", 0)
                 .groupBy("gid");
-        List<Map<String, Object>> maps = baseMapper.selectMaps(queryWrapper);
-        return BeanUtil.copyToList(maps, GroupLinkCountRespDTO.class);
+        List<Map<String, Object>> shortLinkDOList = baseMapper.selectMaps(queryWrapper);
+        return BeanUtil.copyToList(shortLinkDOList, ShortLinkGroupCountQueryRespDTO.class);
     }
 
+
+    /**
+     * 更新短链接信息
+     *
+     * @param requestParam 包含更新所需参数的请求DTO
+     */
     @Override
     public void updateShortLink(ShortLinkUpdateReqDTO requestParam) {
+        // 1. 根据分组标识（gid）、完整短链接（fullShortUrl）、删除标识（delFlag）、启用状态（enableStatus）筛选数据库满足条件的数据
         LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
                 .eq(LinkDO::getGid, requestParam.getGid())
                 .eq(LinkDO::getFullShortUrl, requestParam.getFullShortUrl())
                 .eq(LinkDO::getDelFlag, 0)
                 .eq(LinkDO::getEnableStatus, 0);
+
+        // 2. 查询短链接是否存在
         LinkDO hasShortLinkDO = baseMapper.selectOne(queryWrapper);
         if (hasShortLinkDO == null) {
             throw new ClientException("短链接记录不存在");
         }
+
+        // 3. 构造短链接对象进行更新
         LinkDO shortLinkDO = LinkDO.builder()
                 .domain(hasShortLinkDO.getDomain())
                 .shortUri(hasShortLinkDO.getShortUri())
@@ -207,7 +217,10 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                 .validDateType(requestParam.getValidDateType())
                 .validDate(requestParam.getValidDate())
                 .build();
+
+        // 4. 判断查询出的链接和请求的参数中的链接是否在同一分组（gid是否相同）
         if (Objects.equals(hasShortLinkDO.getGid(), requestParam.getGid())) {
+            // 如果在同一分组，进行更新
             LambdaUpdateWrapper<LinkDO> updateWrapper = Wrappers.lambdaUpdate(LinkDO.class)
                     .eq(LinkDO::getFullShortUrl, requestParam.getFullShortUrl())
                     .eq(LinkDO::getGid, requestParam.getGid())
@@ -217,6 +230,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                     .set(Objects.equals(requestParam.getValidDateType(), VailDateTypeEnum.PERMANENT.getType()), LinkDO::getValidDate, null);
             baseMapper.update(shortLinkDO, updateWrapper);
         } else {
+            // 如果不在同一分组，先删除原有链接，再插入新链接
             LambdaUpdateWrapper<LinkDO> updateWrapper = Wrappers.lambdaUpdate(LinkDO.class)
                     .eq(LinkDO::getFullShortUrl, requestParam.getFullShortUrl())
                     .eq(LinkDO::getGid, hasShortLinkDO.getGid())
@@ -224,6 +238,16 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                     .eq(LinkDO::getEnableStatus, 0);
             baseMapper.delete(updateWrapper);
             baseMapper.insert(shortLinkDO);
+        }
+        // 如果对日期进行了更改就删除缓存
+        if (!Objects.equals(hasShortLinkDO.getValidDateType(), requestParam.getValidDateType())
+                || !Objects.equals(hasShortLinkDO.getValidDate(), requestParam.getValidDate())) {
+            stringRedisTemplate.delete(String.format(GOTO_SHORT_LINK_KEY, requestParam.getFullShortUrl()));
+            if (hasShortLinkDO.getValidDate() != null && hasShortLinkDO.getValidDate().before(new Date())) {
+                if (Objects.equals(requestParam.getValidDateType(), VailDateTypeEnum.PERMANENT.getType()) || requestParam.getValidDate().after(new Date())) {
+                    stringRedisTemplate.delete(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, requestParam.getFullShortUrl()));
+                }
+            }
         }
     }
 
@@ -291,7 +315,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                     .eq(LinkDO::getEnableStatus, 0);
             LinkDO shortLinkDO = baseMapper.selectOne(queryWrapper);
             // 5.5 查询出来判断是否过期，如果是，则跳转找不到页面
-            if (shortLinkDO == null || shortLinkDO.getValidDate().before(new Date())) {
+            if (shortLinkDO == null || (shortLinkDO.getValidDate()!=null && shortLinkDO.getValidDate().before(new Date()))) {
                 stringRedisTemplate.opsForValue().set(String.format(GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "-", 30, TimeUnit.MINUTES);
                 ((HttpServletResponse) response).sendRedirect("/page/notfound");
                 return;

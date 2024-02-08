@@ -10,6 +10,7 @@ import com.tjut.zjone.dto.req.RecycleBinRemoveReqDTO;
 import com.tjut.zjone.dto.req.RecycleBinSaveReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
+import com.tjut.zjone.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.tjut.zjone.remote.dto.req.*;
 import com.tjut.zjone.remote.dto.resp.*;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,18 +34,18 @@ public interface ShortLinkRemoteService {
         requestMap.put("orderTag", requestParam.getOrderTag());
         requestMap.put("current", requestParam.getCurrent());
         requestMap.put("size", requestParam.getSize());
-        String resultStr = HttpUtil.get("http://localhost:8001/api/short-link/admin/v1/page", requestMap);
+        String resultStr = HttpUtil.get("http://localhost:8001/api/short-link/v1/page", requestMap);
         return JSON.parseObject(resultStr, new TypeReference<>() {
         });
     }
 
-    default Result<List<GroupLinkCountRespDTO>> groupShortLinkCount(List<String> requestParam) {
-        Map<String, Object> requestMap = new HashMap<>();
-        requestMap.put("requestParam", requestParam);
-        String resultStr = HttpUtil.get("http://localhost:8001/api/short-link/v1/count", requestMap);
-        return JSON.parseObject(resultStr, new TypeReference<>() {
-        });
-    }
+//    default Result<List<GroupLinkCountRespDTO>> groupShortLinkCount(List<String> requestParam) {
+//        Map<String, Object> requestMap = new HashMap<>();
+//        requestMap.put("requestParam", requestParam);
+//        String resultStr = HttpUtil.get("http://localhost:8001/api/short-link/v1/count", requestMap);
+//        return JSON.parseObject(resultStr, new TypeReference<>() {
+//        });
+//    }
 
     default void updateShortLink(ShortLinkUpdateReqDTO requestParam) {
         HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/update", JSON.toJSONString(requestParam));
@@ -156,6 +157,7 @@ public interface ShortLinkRemoteService {
 
 
 
+
     /**
      * 批量创建短链接
      *
@@ -165,6 +167,20 @@ public interface ShortLinkRemoteService {
     default Result<ShortLinkBatchCreateRespDTO> batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam) {
         String resultBodyStr = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/create/batch", JSON.toJSONString(requestParam));
         return JSON.parseObject(resultBodyStr, new TypeReference<>() {
+        });
+    }
+
+    /**
+     * 查询分组短链接总量
+     *
+     * @param requestParam 分组短链接总量请求参数
+     * @return 查询分组短链接总量响应
+     */
+    default Result<List<ShortLinkGroupCountQueryRespDTO>> listGroupShortLinkCount(List<String> requestParam) {
+        Map<String, Object> requestMap = new HashMap<>();
+        requestMap.put("requestParam", requestParam);
+        String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/count", requestMap);
+        return JSON.parseObject(resultPageStr, new TypeReference<>() {
         });
     }
 

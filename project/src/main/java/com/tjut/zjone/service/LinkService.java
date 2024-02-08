@@ -7,10 +7,7 @@ import com.tjut.zjone.dto.req.ShortLinkBatchCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkPageReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
-import com.tjut.zjone.dto.resp.GroupLinkCountRespDTO;
-import com.tjut.zjone.dto.resp.ShortLinkBatchCreateRespDTO;
-import com.tjut.zjone.dto.resp.ShortLinkCreateRespDTO;
-import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
+import com.tjut.zjone.dto.resp.*;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 
@@ -32,7 +29,7 @@ public interface LinkService extends IService<LinkDO> {
 
     IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam);
 
-    List<GroupLinkCountRespDTO> groupLinkCount(List<String>  requestParam);
+    List<ShortLinkGroupCountQueryRespDTO> listGroupShortLinkCount(List<String>  requestParam);
 
     void updateShortLink(ShortLinkUpdateReqDTO requestParam);
 

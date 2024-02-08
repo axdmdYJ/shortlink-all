@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.tjut.zjone.common.convention.result.Result;
 import com.tjut.zjone.common.convention.result.Results;
 import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
+import com.tjut.zjone.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.tjut.zjone.remote.ShortLinkRemoteService;
 import com.tjut.zjone.remote.dto.req.*;
 import com.tjut.zjone.remote.dto.resp.*;
@@ -32,8 +33,8 @@ public class ShortLinkController {
     }
 
     @GetMapping("/api/short-link/v1/count")
-    public  Result<List<GroupLinkCountRespDTO>> groupShortLinkCount(@RequestParam("requestParam") List<String> requestParam){
-        return remoteService.groupShortLinkCount(requestParam);
+    public  Result<List<ShortLinkGroupCountQueryRespDTO>> groupShortLinkCount(@RequestParam("requestParam") List<String> requestParam){
+        return remoteService.listGroupShortLinkCount(requestParam);
     }
 
     /**

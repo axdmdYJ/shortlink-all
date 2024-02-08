@@ -8,10 +8,7 @@ import com.tjut.zjone.dto.req.ShortLinkBatchCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkPageReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
-import com.tjut.zjone.dto.resp.GroupLinkCountRespDTO;
-import com.tjut.zjone.dto.resp.ShortLinkBatchCreateRespDTO;
-import com.tjut.zjone.dto.resp.ShortLinkCreateRespDTO;
-import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
+import com.tjut.zjone.dto.resp.*;
 import com.tjut.zjone.service.LinkService;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
@@ -31,14 +28,14 @@ public class ShortLinkController {
         return Results.success(linkService.createShortLink(requestParam));
     }
 
-    @GetMapping("/api/short-link/admin/v1/page")
-    public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam){
+    @GetMapping("/api/short-link/v1/page")
+    public Result<IPage<ShortLinkPageRespDTO>> pageShortLink( ShortLinkPageReqDTO requestParam){
         return Results.success(linkService.pageShortLink(requestParam));
     }
 
     @GetMapping("/api/short-link/v1/count")
-    public  Result<List<GroupLinkCountRespDTO>> groupShortLinkCount(@RequestParam("requestParam") List<String> requestParam){
-        return Results.success(linkService.groupLinkCount(requestParam));
+    public  Result<List<ShortLinkGroupCountQueryRespDTO>> groupShortLinkCount(@RequestParam("requestParam") List<String> requestParam){
+        return Results.success(linkService.listGroupShortLinkCount(requestParam));
     }
 
     /**

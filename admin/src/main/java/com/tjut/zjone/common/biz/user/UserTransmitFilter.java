@@ -30,6 +30,8 @@ public class UserTransmitFilter implements Filter {
         "/api/short-link/admin/v1/user/login",
             "/api/short-link/admin/v1/actual/user/has-username",
             "/api/short-link/admin/v1/user",
+            "/api/short-link/admin/v1/title",
+            "/api/short-link/admin/v1/user/has-username",
             "/api/short-link/admin/v1/title"
     );
     @Override

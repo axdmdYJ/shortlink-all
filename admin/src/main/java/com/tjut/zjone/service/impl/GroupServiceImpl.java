@@ -5,21 +5,21 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tjut.zjone.common.biz.user.UserContext;
+import com.tjut.zjone.common.convention.result.Result;
 import com.tjut.zjone.dao.entity.GroupDO;
 import com.tjut.zjone.dao.mapper.GroupMapper;
 import com.tjut.zjone.dto.req.GroupSaveNameReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkGroupSortDTO;
 import com.tjut.zjone.dto.req.ShortLinkGroupUpdateReqDTO;
+import com.tjut.zjone.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkGroupListRespDTO;
 import com.tjut.zjone.remote.ShortLinkRemoteService;
-import com.tjut.zjone.remote.dto.resp.GroupLinkCountRespDTO;
 import com.tjut.zjone.service.GroupService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.tjut.zjone.util.GidGeneratorUtil.generateRandomString;
 
@@ -57,7 +57,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
         }
         GroupDO groupDO = GroupDO.builder()
                 .sortOrder(0)
-                .username(UserContext.getUsername())
+                .username(username)
                 .name(groupName)
                 .gid(gid)
                 .build();
@@ -71,12 +71,16 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
                 .eq(GroupDO::getUsername, UserContext.getUsername())
                 .orderByDesc(GroupDO::getSortOrder);
         List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
-        List<GroupLinkCountRespDTO> gids = remoteService.groupShortLinkCount(groupDOList.stream().map(GroupDO::getGid).toList()).getData();
-        List<ShortLinkGroupListRespDTO> results = BeanUtil.copyToList(groupDOList, ShortLinkGroupListRespDTO.class);
-        Map<String, Integer> counts = gids.stream()
-                .collect(Collectors
-                .toMap(GroupLinkCountRespDTO::getGid, GroupLinkCountRespDTO::getShortLinkCount));
-        return results.stream().peek(result -> result.setShortLinkCount(counts.getOrDefault(result.getGid(), 0))).toList();
+        Result<List<ShortLinkGroupCountQueryRespDTO>> listResult = remoteService
+                .listGroupShortLinkCount(groupDOList.stream().map(GroupDO::getGid).toList());
+        List<ShortLinkGroupListRespDTO> shortLinkGroupRespDTOList = BeanUtil.copyToList(groupDOList, ShortLinkGroupListRespDTO.class);
+        shortLinkGroupRespDTOList.forEach(each -> {
+            Optional<ShortLinkGroupCountQueryRespDTO> first = listResult.getData().stream()
+                    .filter(item -> Objects.equals(item.getGid(), each.getGid()))
+                    .findFirst();
+            first.ifPresent(item -> each.setShortLinkCount(first.get().getShortLinkCount()));
+        });
+        return shortLinkGroupRespDTOList;
     }
 
     @Override

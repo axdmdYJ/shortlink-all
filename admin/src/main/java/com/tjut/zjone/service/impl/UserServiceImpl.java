@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
     implements UserService {
-    private final RBloomFilter<String> userRegisterCzachePenetrationBloomFilter;
+    private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final UserMapper userMapper;
@@ -66,7 +66,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
 
     @Override
     public Boolean hasUsername(String username) {
-        return userRegisterCzachePenetrationBloomFilter.contains(username);
+        return userRegisterCachePenetrationBloomFilter.contains(username);
     }
 
     @Override
@@ -81,7 +81,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
                 if(inserted < 1){
                     throw new ClientException(UserErrorCodeEnum.USER_SAVE_FAILE);
                 }
-                userRegisterCzachePenetrationBloomFilter.add(registerParam.getUsername());
+                userRegisterCachePenetrationBloomFilter.add(registerParam.getUsername());
                 groupService.saveGroupName(registerParam.getUsername(),"默认分组");
             }
         }finally {
@@ -115,7 +115,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
         String token = UUID.randomUUID().toString();
         //避免重复登陆
         stringRedisTemplate.opsForHash().put("login_"+requestParam.getUsername(), token, JSON.toJSONString(user));
-        stringRedisTemplate.expire("login_"+requestParam.getUsername(),30L, TimeUnit.MINUTES);
         return Results.success(new UserLoginRespDTO(token));
     }
 
