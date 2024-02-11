@@ -3,11 +3,15 @@ package com.tjut.zjone.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.tjut.zjone.dao.entity.LinkDO;
+import com.tjut.zjone.dto.biz.ShortLinkStatsRecordDTO;
 import com.tjut.zjone.dto.req.ShortLinkBatchCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkPageReqDTO;
 import com.tjut.zjone.dto.req.ShortLinkUpdateReqDTO;
-import com.tjut.zjone.dto.resp.*;
+import com.tjut.zjone.dto.resp.ShortLinkBatchCreateRespDTO;
+import com.tjut.zjone.dto.resp.ShortLinkCreateRespDTO;
+import com.tjut.zjone.dto.resp.ShortLinkGroupCountQueryRespDTO;
+import com.tjut.zjone.dto.resp.ShortLinkPageRespDTO;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 
@@ -42,5 +46,15 @@ public interface LinkService extends IService<LinkDO> {
      * @return 批量创建短链接返回参数
      */
     ShortLinkBatchCreateRespDTO batchCreateShortLink(ShortLinkBatchCreateReqDTO requestParam);
+
+
+    /**
+     * 短链接统计
+     *
+     * @param fullShortUrl         完整短链接
+     * @param gid                  分组标识
+     * @param shortLinkStatsRecord 短链接统计实体参数
+     */
+    void shortLinkStats(String fullShortUrl, String gid, ShortLinkStatsRecordDTO shortLinkStatsRecord);
 
 }
