@@ -485,7 +485,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
             uvCookie.setPath(StrUtil.sub(fullShortUrl, fullShortUrl.indexOf("/"), fullShortUrl.length()));
             ((HttpServletResponse) response).addCookie(uvCookie);
             uvFirstFlag.set(Boolean.TRUE);
-            stringRedisTemplate.opsForSet().add("short-link:stats:uv:" + fullShortUrl, uv.get());
+            stringRedisTemplate.opsForSet().add(SHORT_LINK_STATS_UV_KEY + fullShortUrl, uv.get());
         };
 
         // 如果Cookie数组不为空，则尝试获取名为"uv"的Cookie值
@@ -498,7 +498,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                         // 如果存在"uv"的Cookie，则将UV标识设置为Cookie的值
                         uv.set(each);
                         // 尝试将UV标识添加到Redis的集合中，判断是否为UV的第一次访问
-                        Long uvAdded = stringRedisTemplate.opsForSet().add("short-link:stats:uv:" + fullShortUrl, each);
+                        Long uvAdded = stringRedisTemplate.opsForSet().add(SHORT_LINK_STATS_UV_KEY + fullShortUrl, each);
                         uvFirstFlag.set(uvAdded != null && uvAdded > 0L);
                     }, addResponseCookieTask);
         } else {
@@ -514,7 +514,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
         String network = LinkUtil.getNetwork(((HttpServletRequest) request));
 
         // 将用户IP添加到Redis的集合中，判断是否为UIP的第一次访问
-        Long uipAdded = stringRedisTemplate.opsForSet().add("short-link:stats:uip:" + fullShortUrl, remoteAddr);
+        Long uipAdded = stringRedisTemplate.opsForSet().add(SHORT_LINK_STATS_UIP_KEY + fullShortUrl, remoteAddr);
         boolean uipFirstFlag = uipAdded != null && uipAdded > 0L;
 
         // 构建并返回短链接访问统计记录DTO

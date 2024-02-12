@@ -8,9 +8,11 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.tjut.zjone.common.convention.exception.ServiceException;
 import com.tjut.zjone.dao.entity.*;
 import com.tjut.zjone.dao.mapper.*;
 import com.tjut.zjone.dto.biz.ShortLinkStatsRecordDTO;
+import com.tjut.zjone.mq.idempotent.MessageQueueIdempotentHandler;
 import com.tjut.zjone.mq.producer.DelayShortLinkStatsProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,30 +54,54 @@ public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRec
     private final StringRedisTemplate stringRedisTemplate;
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
+    private final MessageQueueIdempotentHandler messageQueueIdempotentHandler;
 
     @Override
     public void onMessage(MapRecord<String, String, String> message) {
-        // 获取消息的 stream、id 和 value
+        // 获取消息的 Stream 名称
         String stream = message.getStream();
+
+        // 获取消息的唯一标识
         RecordId id = message.getId();
-        Map<String, String> producerMap = message.getValue();
 
-        // 从消息中获取 "fullShortUrl" 对应的值
-        String fullShortUrl = producerMap.get("fullShortUrl");
+        // 判断消息是否已经被处理过，确保消息的幂等性
+        if (!messageQueueIdempotentHandler.isMessageProcessed(id.toString())) {
+            // 判断当前的这个消息流程是否执行完成，如果完成，则直接返回，不做处理
+            if (messageQueueIdempotentHandler.isAccomplish(id.toString())) {
+                return;
+            }
 
-        // 如果 fullShortUrl 不为空，则继续处理
-        if (StrUtil.isNotBlank(fullShortUrl)) {
-            // 从消息中获取 "gid" 和 "statsRecord" 的值
-            String gid = producerMap.get("gid");
-            ShortLinkStatsRecordDTO statsRecord = JSON.parseObject(producerMap.get("statsRecord"), ShortLinkStatsRecordDTO.class);
-
-            // 调用 actualSaveShortLinkStats 方法保存短链接统计信息
-            actualSaveShortLinkStats(fullShortUrl, gid, statsRecord);
+            // 如果消息未完成流程，抛出 ServiceException，通知消息队列进行重试
+            throw new ServiceException("消息未完成流程，需要消息队列重试");
         }
 
-        // 删除已处理的消息，防止重复处理
-        stringRedisTemplate.opsForStream().delete(Objects.requireNonNull(stream), id.getValue());
+        try {
+            // 从消息中获取生产者传递的数据
+            Map<String, String> producerMap = message.getValue();
+            String fullShortUrl = producerMap.get("fullShortUrl");
+
+            // 判断生产者传递的短链接是否为空
+            if (StrUtil.isNotBlank(fullShortUrl)) {
+                String gid = producerMap.get("gid");
+                // 将 JSON 格式的短链接统计数据转换为对象
+                ShortLinkStatsRecordDTO statsRecord = JSON.parseObject(producerMap.get("statsRecord"), ShortLinkStatsRecordDTO.class);
+                // 实际保存短链接统计数据的方法
+                actualSaveShortLinkStats(fullShortUrl, gid, statsRecord);
+            }
+
+            // 处理完成后删除 Redis Stream 中的消息
+            stringRedisTemplate.opsForStream().delete(Objects.requireNonNull(stream), id.getValue());
+        } catch (Throwable ex) {
+            // 捕捉异常，处理异常情况
+            // 记录未完成流程的消息，用于消息队列重试
+            messageQueueIdempotentHandler.delMessageProcessed(id.toString());
+            log.error("记录短链接监控消费异常", ex);
+        }
+
+        // 设置消息为已完成流程，防止重复处理
+        messageQueueIdempotentHandler.setAccomplish(id.toString());
     }
+
 
     public void actualSaveShortLinkStats(String fullShortUrl, String gid, ShortLinkStatsRecordDTO statsRecord) {
         fullShortUrl = Optional.ofNullable(fullShortUrl).orElse(statsRecord.getFullShortUrl());

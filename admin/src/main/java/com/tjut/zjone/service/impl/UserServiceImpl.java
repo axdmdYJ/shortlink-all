@@ -33,6 +33,8 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.tjut.zjone.common.constant.RedisCacheConstant.USER_LOGIN_KEY;
+
 /**
 * @author a0000
 * @description 针对表【t_user】的数据库操作Service实现
@@ -111,7 +113,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
 //        if (hasedLogin !=null && hasedLogin){
 //            throw new ClientException("用户已登陆");
 //        }
-        Map<Object ,Object> hasLoginMap = stringRedisTemplate.opsForHash().entries("login_" + requestParam.getUsername());
+        Map<Object ,Object> hasLoginMap = stringRedisTemplate.opsForHash().entries(USER_LOGIN_KEY+ requestParam.getUsername());
         if (CollUtil.isNotEmpty(hasLoginMap)) {
             String token = hasLoginMap.keySet().stream()
                     .findFirst()
@@ -121,19 +123,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
         }
         String token = UUID.randomUUID().toString();
         //避免重复登陆
-        stringRedisTemplate.opsForHash().put("login_"+requestParam.getUsername(), token, JSON.toJSONString(user));
-        stringRedisTemplate.expire("login_" + requestParam.getUsername(), 30L, TimeUnit.MINUTES);
+        stringRedisTemplate.opsForHash().put(USER_LOGIN_KEY+requestParam.getUsername(), token, JSON.toJSONString(user));
+        stringRedisTemplate.expire(USER_LOGIN_KEY + requestParam.getUsername(), 30L, TimeUnit.MINUTES);
         return Results.success(new UserLoginRespDTO(token));
     }
 
     @Override
     public Boolean userHasLogin(String username, String token) {
-        return stringRedisTemplate.opsForHash().get("login_"+ username, token) != null;
+        return stringRedisTemplate.opsForHash().get(USER_LOGIN_KEY+ username, token) != null;
     }
 
     @Override
     public void userLogout(String username, String token) {
-        stringRedisTemplate.opsForHash().delete("login_"+ username, token);
+        stringRedisTemplate.opsForHash().delete(USER_LOGIN_KEY+ username, token);
     }
 
 }
