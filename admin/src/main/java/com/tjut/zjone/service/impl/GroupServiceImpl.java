@@ -1,10 +1,12 @@
 package com.tjut.zjone.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tjut.zjone.common.biz.user.UserContext;
+import com.tjut.zjone.common.convention.exception.ClientException;
 import com.tjut.zjone.common.convention.result.Result;
 import com.tjut.zjone.dao.entity.GroupDO;
 import com.tjut.zjone.dao.mapper.GroupMapper;
@@ -15,12 +17,18 @@ import com.tjut.zjone.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.tjut.zjone.dto.resp.ShortLinkGroupListRespDTO;
 import com.tjut.zjone.remote.ShortLinkRemoteService;
 import com.tjut.zjone.service.GroupService;
+import com.tjut.zjone.util.GidGeneratorUtil;
+import lombok.RequiredArgsConstructor;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static com.tjut.zjone.common.constant.RedisCacheConstant.LOCK_GROUP_CREATE_KEY;
 import static com.tjut.zjone.util.GidGeneratorUtil.generateRandomString;
 
 /**
@@ -29,8 +37,14 @@ import static com.tjut.zjone.util.GidGeneratorUtil.generateRandomString;
 * @createDate 2024-01-24 19:12:58
 */
 @Service
+@RequiredArgsConstructor
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
     implements GroupService {
+
+    private final RedissonClient redissonClient;
+
+    @Value("${short-link.group.max-num}")
+    private Integer groupMaxNum;
 
     private  final ShortLinkRemoteService remoteService = new ShortLinkRemoteService() {
     };
@@ -51,17 +65,30 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO>
 
     @Override
     public void saveGroupName(String username, String groupName) {
-        String gid = generateRandomString();
-        while (gidIfAbsent(username,gid)){
-            gid = generateRandomString();
+        RLock lock = redissonClient.getLock(String.format(LOCK_GROUP_CREATE_KEY, username));
+        lock.lock();
+        try {
+            LambdaQueryWrapper<GroupDO> queryWrapper = Wrappers.lambdaQuery(GroupDO.class)
+                    .eq(GroupDO::getUsername, username)
+                    .eq(GroupDO::getDelFlag, 0);
+            List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
+            if (CollUtil.isNotEmpty(groupDOList) && groupDOList.size() == groupMaxNum) {
+                throw new ClientException(String.format("已超出最大分组数：%d", groupMaxNum));
+            }
+            String gid;
+            do {
+                gid = GidGeneratorUtil.generateRandomString();
+            } while (!gidIfAbsent(username, gid));
+            GroupDO groupDO = GroupDO.builder()
+                    .gid(gid)
+                    .sortOrder(0)
+                    .username(username)
+                    .name(groupName)
+                    .build();
+            baseMapper.insert(groupDO);
+        } finally {
+            lock.unlock();
         }
-        GroupDO groupDO = GroupDO.builder()
-                .sortOrder(0)
-                .username(username)
-                .name(groupName)
-                .gid(gid)
-                .build();
-        baseMapper.insert(groupDO);
     }
 
     /**

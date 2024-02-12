@@ -1,6 +1,7 @@
 package com.tjut.zjone.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.UUID;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -14,13 +15,11 @@ import com.tjut.zjone.common.convention.result.Results;
 import com.tjut.zjone.common.enums.UserErrorCodeEnum;
 import com.tjut.zjone.dao.entity.UserDO;
 import com.tjut.zjone.dao.mapper.UserMapper;
-import com.tjut.zjone.dto.req.GroupSaveNameReqDTO;
-import com.tjut.zjone.dto.resp.UserLoginRespDTO;
-import com.tjut.zjone.dto.resp.UserRespDTO;
 import com.tjut.zjone.dto.req.UserLoginReqDTO;
 import com.tjut.zjone.dto.req.UserRegisterReqDTO;
 import com.tjut.zjone.dto.req.UserUpdateReqDTO;
-import com.tjut.zjone.remote.ShortLinkRemoteService;
+import com.tjut.zjone.dto.resp.UserLoginRespDTO;
+import com.tjut.zjone.dto.resp.UserRespDTO;
 import com.tjut.zjone.service.GroupService;
 import com.tjut.zjone.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -29,9 +28,9 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.TimeoutUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -112,9 +111,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
 //        if (hasedLogin !=null && hasedLogin){
 //            throw new ClientException("用户已登陆");
 //        }
+        Map<Object ,Object> hasLoginMap = stringRedisTemplate.opsForHash().entries("login_" + requestParam.getUsername());
+        if (CollUtil.isNotEmpty(hasLoginMap)) {
+            String token = hasLoginMap.keySet().stream()
+                    .findFirst()
+                    .map(Object::toString)
+                    .orElseThrow(() -> new ClientException("用户登录错误"));
+            return Results.success(new UserLoginRespDTO(token));
+        }
         String token = UUID.randomUUID().toString();
         //避免重复登陆
         stringRedisTemplate.opsForHash().put("login_"+requestParam.getUsername(), token, JSON.toJSONString(user));
+        stringRedisTemplate.expire("login_" + requestParam.getUsername(), 30L, TimeUnit.MINUTES);
         return Results.success(new UserLoginRespDTO(token));
     }
 

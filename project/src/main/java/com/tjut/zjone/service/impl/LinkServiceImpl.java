@@ -20,6 +20,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.tjut.zjone.common.convention.exception.ClientException;
 import com.tjut.zjone.common.convention.exception.ServiceException;
 import com.tjut.zjone.common.enums.VailDateTypeEnum;
+import com.tjut.zjone.config.GotoDomainWhiteListConfiguration;
 import com.tjut.zjone.dao.entity.*;
 import com.tjut.zjone.dao.mapper.*;
 import com.tjut.zjone.dto.biz.ShortLinkStatsRecordDTO;
@@ -91,6 +92,8 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
 
     private final LinkStatsTodayService linkStatsTodayService;
     private final DelayShortLinkStatsProducer delayShortLinkStatsProducer;
+    private final GotoDomainWhiteListConfiguration gotoDomainWhiteListConfiguration;
+
     /**
      * 开发环境默认域名测试
      */
@@ -104,6 +107,8 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
 
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
+        // 验证
+        verificationWhitelist(requestParam.getOriginUrl());
         String suffix = generateSuffix(requestParam);
 
 //        String fullShortUrl = requestParam.getDomain() + "/" + suffix;
@@ -174,7 +179,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
             originUrl += System.currentTimeMillis();
             shortUri = hashToBase62(originUrl);
 
-            if (!bloomFilter.contains(requestParam.getDomain() + "/" + shortUri)) break;
+            if (!bloomFilter.contains(createShortLinkDefaultDomain+ "/" + shortUri)) break;
             generate_count++;
         }
         return shortUri;
@@ -200,6 +205,8 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
      */
     @Override
     public void updateShortLink(ShortLinkUpdateReqDTO requestParam) {
+        verificationWhitelist(requestParam.getOriginUrl());
+
         // 1. 根据分组标识（gid）、完整短链接（fullShortUrl）、删除标识（delFlag）、启用状态（enableStatus）筛选数据库满足条件的数据
         LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
                 .eq(LinkDO::getGid, requestParam.getOriginGid())
@@ -747,7 +754,20 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
                 .build();
     }
 
-
+    private void verificationWhitelist(String originUrl) {
+        Boolean enable = gotoDomainWhiteListConfiguration.getEnable();
+        if (enable == null || !enable) {
+            return;
+        }
+        String domain = LinkUtil.extractDomain(originUrl);
+        if (StrUtil.isBlank(domain)) {
+            throw new ClientException("跳转链接填写错误");
+        }
+        List<String> details = gotoDomainWhiteListConfiguration.getDetails();
+        if (!details.contains(domain)) {
+            throw new ClientException("演示环境为避免恶意攻击，请生成以下网站跳转链接：" + gotoDomainWhiteListConfiguration.getNames());
+        }
+    }
 }
 
 
