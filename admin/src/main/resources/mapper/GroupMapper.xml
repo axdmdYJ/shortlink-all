@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.tjut.zjone.dao.mapper.GroupMapper">
 
-    <resultMap id="BaseResultMap" type="com.tjut.zjone.dao.entity.GroupDO">
+    <resultMap id="BaseResultMap" type="com.tjut.shortlink.admin.dao.entity.GroupDO">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="gid" column="gid" jdbcType="VARCHAR"/>
             <result property="name" column="name" jdbcType="VARCHAR"/>

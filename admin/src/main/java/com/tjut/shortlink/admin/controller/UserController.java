@@ -1,0 +1,73 @@
+package com.tjut.shortlink.admin.controller;
+
+
+import cn.hutool.core.bean.BeanUtil;
+import com.tjut.shortlink.admin.common.convention.result.Result;
+import com.tjut.shortlink.admin.common.convention.result.Results;
+import com.tjut.shortlink.admin.dto.resp.UserActualRespDTO;
+import com.tjut.shortlink.admin.dto.resp.UserLoginRespDTO;
+import com.tjut.shortlink.admin.dto.resp.UserRespDTO;
+import com.tjut.shortlink.admin.dto.req.UserLoginReqDTO;
+import com.tjut.shortlink.admin.dto.req.UserRegisterReqDTO;
+import com.tjut.shortlink.admin.dto.req.UserUpdateReqDTO;
+import com.tjut.shortlink.admin.service.UserService;
+import jakarta.annotation.Resource;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+public class UserController {
+
+    @Resource
+    private UserService userService;
+
+    @GetMapping("/api/short-link/admin/v1/user/{username}")
+    public Result<UserRespDTO> getUserByUsername(@PathVariable String username){
+       return Results.success(userService.getUserByUsername(username));
+    }
+    @GetMapping("/api/short-link/admin/v1/actual/user/{username}")
+    public Result<UserActualRespDTO> getActualUserByUsername(@PathVariable String username){
+       return  Results.success(BeanUtil.toBean(userService.getUserByUsername(username),UserActualRespDTO.class));
+    }
+
+    @GetMapping("/api/short-link/admin/v1/user/has-username")
+    public Result<Boolean> hasUsername(String username){
+            return Results.success(userService.hasUsername(username));
+    }
+
+    /**
+     * 注册用户
+     * @param registerParam
+     * @return
+     */
+    @PostMapping("/api/short-link/admin/v1/user")
+    public Result<Void> userRegister(@RequestBody UserRegisterReqDTO registerParam){
+        userService.userRegister(registerParam);
+        return Results.success();
+    }
+
+    @PutMapping("/api/short-link/admin/v1/user")
+    public Result<Void> userUpdate(@RequestBody UserUpdateReqDTO requestParam){
+        userService.userUpdate(requestParam);
+        return Results.success();
+    }
+
+    @PostMapping("/api/short-link/admin/v1/user/login")
+    public Result<UserLoginRespDTO> userLogin(@RequestBody UserLoginReqDTO requestParam){
+        return userService.userLogin(requestParam);
+    }
+
+    @GetMapping("/api/short-link/admin/v1/user/check-login")
+    public Result<Boolean> userHasLogin(@RequestParam("username") String username ,@RequestParam("token") String token){
+        Boolean hasLogin = userService.userHasLogin(username, token);
+        return  Results.success(hasLogin);
+    }
+
+    @DeleteMapping("/api/short-link/admin/v1/user/logout")
+    public  Result<Void> userLogout(@RequestParam("username") String username, @RequestParam("token") String token){
+        userService.userLogout(username, token);
+        return Results.success();
+    }
+
+
+
+}

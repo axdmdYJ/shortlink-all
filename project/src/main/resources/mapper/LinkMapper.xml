@@ -20,8 +20,8 @@
 <mapper namespace="com.tjut.zjone.dao.mapper.LinkMapper">
 
     <!-- 分页查询短链接 -->
-    <select id="pageLink" parameterType="com.tjut.zjone.dto.req.ShortLinkPageReqDTO"
-            resultType="com.tjut.zjone.dao.entity.LinkDO">
+    <select id="pageLink" parameterType="com.tjut.shortlink.project.dto.req.ShortLinkPageReqDTO"
+            resultType="com.tjut.shortlink.project.dao.entity.LinkDO">
         SELECT t.*,
         COALESCE(s.today_pv, 0) AS todayPv,
         COALESCE(s.today_uv, 0) AS todayUv,

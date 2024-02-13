@@ -10,11 +10,17 @@
         <module name="shortlink-gateway" />
         <module name="shortlink-admin" />
         <module name="shortlink-project" />
+        <module name="shortlink-aggregation" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="8">
       <module name="gateway" target="17" />
       <module name="shortlink" target="1.5" />
     </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="shortlink-aggregation" options="" />
+    </option>
   </component>
 </project>

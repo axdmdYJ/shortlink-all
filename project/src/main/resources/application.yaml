@@ -1,6 +1,8 @@
 server:
   port: 8001
 spring:
+  application:
+    name: short-link-project
   datasource:
     # ShardingSphere 对 Driver 自定义，实现分库分表等隐藏逻辑
     driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
@@ -10,13 +12,17 @@ spring:
     redis:
       host: 127.0.0.1
       port: 6379
-      channel-topic:
-        short-link-stats: 'short_link:stats-stream'
-        short-link-stats-group: 'short_link:stats-stream:only-group'
+  cloud:
+    nacos:
+      username: nacos
+      password: nacos
+      discovery:
+        server-addr: 127.0.0.1:8848
   mvc:
     view:
       prefix: /templates/
       suffix: .html
+
 short-link:
   domain:
     default: nurl.ink:8001
@@ -26,9 +32,8 @@ short-link:
   goto-domain:
     white-list:
       enable: true
-      names: '拿个offer,知乎,掘金,博客园'
+      names: '知乎,掘金,博客园'
       details:
-        - nageoffer.com
         - zhihu.com
         - juejin.cn
         - cnblogs.com
