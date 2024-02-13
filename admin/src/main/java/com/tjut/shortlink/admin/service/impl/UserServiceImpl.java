@@ -27,6 +27,7 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -44,11 +45,12 @@ import static com.tjut.shortlink.admin.common.constant.RedisCacheConstant.USER_L
 @RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO>
     implements UserService {
-    private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final UserMapper userMapper;
     private final GroupService groupService;
+    @Qualifier(value = "rBloomFilterConfigurationByAdmin")
+    private RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     @Override
     public UserRespDTO getUserByUsername(String username) {
             // 调用Mapper方法查询用户

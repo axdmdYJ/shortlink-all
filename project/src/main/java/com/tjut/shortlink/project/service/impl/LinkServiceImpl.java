@@ -18,18 +18,18 @@ import com.tjut.shortlink.project.common.convention.exception.ServiceException;
 import com.tjut.shortlink.project.common.enums.VailDateTypeEnum;
 import com.tjut.shortlink.project.config.GotoDomainWhiteListConfiguration;
 import com.tjut.shortlink.project.dao.entity.*;
+import com.tjut.shortlink.project.dao.mapper.*;
 import com.tjut.shortlink.project.dto.biz.ShortLinkStatsRecordDTO;
 import com.tjut.shortlink.project.dto.req.ShortLinkBatchCreateReqDTO;
 import com.tjut.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.tjut.shortlink.project.dto.req.ShortLinkPageReqDTO;
 import com.tjut.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
+import com.tjut.shortlink.project.dto.resp.*;
 import com.tjut.shortlink.project.mq.producer.DelayShortLinkStatsProducer;
 import com.tjut.shortlink.project.mq.producer.ShortLinkStatsSaveProducer;
 import com.tjut.shortlink.project.service.LinkService;
 import com.tjut.shortlink.project.service.LinkStatsTodayService;
 import com.tjut.shortlink.project.util.LinkUtil;
-import com.tjut.shortlink.project.dao.mapper.*;
-import com.tjut.shortlink.project.dto.resp.*;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.Cookie;
@@ -46,6 +46,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -64,18 +65,16 @@ import static com.tjut.shortlink.project.util.HashUtil.hashToBase62;
 /**
 * @author a0000
 * @description 针对表【t_link】的数据库操作Service实现
-* @createDate 2024-01-26 19:17:33
 */
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Primary
 public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
     implements LinkService {
 
     private final RBloomFilter<String> bloomFilter;
-
     private final ShortLinkGotoMapper shortLinkGotoMapper;
-
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
@@ -86,7 +85,6 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
-
     private final LinkStatsTodayService linkStatsTodayService;
     private final DelayShortLinkStatsProducer delayShortLinkStatsProducer;
     private final GotoDomainWhiteListConfiguration gotoDomainWhiteListConfiguration;

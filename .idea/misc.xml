@@ -12,6 +12,7 @@
     </option>
     <option name="ignoredFiles">
       <set>
+        <option value="$PROJECT_DIR$/../nageoffer-link/shortlink/aggregation/pom.xml" />
         <option value="$PROJECT_DIR$/shortlink-admin/pom.xml" />
         <option value="$PROJECT_DIR$/shortlink-gateway/pom.xml" />
       </set>

@@ -4,29 +4,26 @@ package com.tjut.shortlink.admin.config;
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * MybatisPlus 配置文件
  *
  */
+@Configuration(value = "dataBaseConfigurationByAdmin")
 public class MybatisPlusAutoConfiguration {
 
     /**
      * 分页插件
      */
     @Bean
-    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+    @ConditionalOnBean
+    public MybatisPlusInterceptor mybatisPlusInterceptorByAdmin() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
         return interceptor;
     }
 
-    /**
-     * 元数据填充
-     */
-    @Bean
-    public MyMetaObjectHandler myMetaObjectHandler() {
-        return new MyMetaObjectHandler();
-    }
 }
