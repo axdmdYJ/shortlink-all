@@ -49,6 +49,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -99,6 +100,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
 //    @Value("${short-link.stats.locale.amap-key}")
 //    private String statsLocaleAmapKey;
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public ShortLinkCreateRespDTO createShortLink(ShortLinkCreateReqDTO requestParam) {
         // 验证
@@ -127,13 +129,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
             baseMapper.insert(linkDO);
             shortLinkGotoMapper.insert(linkGotoDO);
         } catch (DuplicateKeyException e) {
-            LambdaQueryWrapper<LinkDO> queryWrapper = Wrappers.lambdaQuery(LinkDO.class)
-                    .eq(LinkDO::getFullShortUrl, fullShortUrl);
-            LinkDO shortLink = baseMapper.selectOne(queryWrapper);
-            if (shortLink != null){
-                log.warn("短链接: {} 重复入库", fullShortUrl);
-                throw new ServiceException("短链接生成重复");
-            }
+            throw new ServiceException(String.format("短链接：%s 生成重复", fullShortUrl));
         }
         stringRedisTemplate.opsForValue().set(
                 String.format(GOTO_SHORT_LINK_KEY, fullShortUrl),
@@ -170,7 +166,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, LinkDO>
 //                    .eq(LinkDO::getFullShortUrl, fullShortUrl);
 //            LinkDO linkDO = baseMapper.selectOne(queryWrapper);
 //            if (linkDO == null) break;
-            originUrl += System.currentTimeMillis();
+            originUrl += UUID.randomUUID().toString();
             shortUri = hashToBase62(originUrl);
 
             if (!bloomFilter.contains(createShortLinkDefaultDomain+ "/" + shortUri)) break;
