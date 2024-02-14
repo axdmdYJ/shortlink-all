@@ -1,4 +1,3 @@
-# 链接巧匠平台
 ## 介绍
 
 链接巧匠平台：项目介绍: 短链接 (ShortLink) 是指将一个原始的长 URL (Uniform ResourceLocator) 通过特定的算法或服务转化为一个更短、易于记忆的 URL。短链接通常只包含几个字符，而原始的长 URL 可能会非常长。
@@ -19,4 +18,6 @@
 - 跟踪统计：一些短链接服务还会提供访问统计和分析功能，记录访问量、来源、地理位置等信息。
 
 ## 技术架构
+
+![image.png](https://cdn.nlark.com/yuque/0/2024/png/38717174/1707912693825-6e76a214-6205-4744-9f7a-bae7a37933aa.png#averageHue=%23f8f6f6&clientId=u36d9381c-3ac5-4&from=paste&height=637&id=u4f23287b&originHeight=1274&originWidth=2726&originalType=binary&ratio=2&rotation=0&showTitle=false&size=624965&status=done&style=none&taskId=u228b8b94-c72e-4f8b-b07e-dda76639631&title=&width=1363)
 
